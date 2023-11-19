@@ -7,6 +7,7 @@ library(nnet)      # For Neural Network
 library(class)     # For KNN
 library(rpart)     # For Decision Trees
 library(readxl)    # For reading Excel files
+library(tidyr)     # For one-hot encoding
 
 # Setting Working Directory and Checking File Existence
 setwd('C:/Users/dunke/Downloads/')
@@ -38,22 +39,33 @@ if("ID" %in% names(train_data)) {
     train_data <- select(train_data, -ID)
 }
 
-
-# Distribution of Key Variables #EDA
+# Distribution of Key Variables
 hist(train_data$wlth, main = "Wealth Rating Distribution", xlab = "Wealth Rating")
 hist(train_data$hv, main = "Home Value Distribution", xlab = "Home Value in $ Thousands")
 boxplot(train_data$incmed ~ train_data$region, main = "Median Income by Region", ylab = "Income in $ Thousands")
 boxplot(train_data$gifa ~ train_data$sex, main = "Average Gift Amount by Gender", ylab = "Average Gift Amount")
-
 # Splitting Data into Training and Testing Sets
 set.seed(123)
 splitIndex <- createDataPartition(train_data$donr, p = .80, list = FALSE)
 training_set <- train_data[splitIndex,]
 testing_set <- train_data[-splitIndex,]
 
-# Define Predictors
-predictors <- c("region", "ownd", "kids", "inc", "sex", "wlth", "hv", "incmed", "incavg", "low", "npro", "gifdol", "gifl", "gifr", "mdon", "lag", "gifa")
+# One-Hot Encoding for Categorical Variables
+training_set <- training_set %>% mutate_if(is.factor, as.factor) %>%
+                pivot_wider(names_from = region, values_from = region,
+                            values_fn = length, values_fill = list(region = 0)) %>%
+                mutate(across(everything(), as.numeric))
+testing_set <- testing_set %>% mutate_if(is.factor, as.factor) %>%
+              pivot_wider(names_from = region, values_from = region,
+                          values_fn = length, values_fill = list(region = 0)) %>%
+              mutate(across(everything(), as.numeric))
 
+# Define Predictors
+predictors <- names(training_set)[!names(training_set) %in% c("donr", "damt")]
+
+# K-Nearest Neighbors (Classification)
+knn_model <- train(x = training_set[, predictors], y = training_set$donr,
+                   method = "knn", trControl = trainControl(method = "cv", number = 10))
 # Handle any NA values in predictors
 training_set <- training_set %>% na.omit()
 testing_set <- testing_set %>% na.omit()
@@ -84,21 +96,6 @@ lm_model <- lm(damt ~ ., data = training_set[, c(predictors, response_reg)])
 
 # Decision Tree
 tree_model <- rpart(damt ~ ., data = training_set[, c(predictors, response_reg)])
-
-training_set_knn <- training_set %>% mutate_if(is.factor, as.numeric)  # You may use one-hot encoding instead
-testing_set_knn <- testing_set %>% mutate_if(is.factor, as.numeric)    # You may use one-hot encoding instead
-
-# Check for NAs in the dataset and handle them
-training_set_knn <- na.omit(training_set_knn)
-testing_set_knn <- na.omit(testing_set_knn)
-
-# K-Nearest Neighbors (Classification)
-# Ensure you are using the classification method 'knn' and not 'knnreg'
-knn_model <- train(x = training_set_knn[, predictors], y = training_set_knn[[response_class]],
-                   method = "knn", trControl = trainControl(method = "cv", number = 10))
-
-# Evaluation and Output Sections (Remain Unchanged)
-
 
 
 # Evaluation for Classification Models
@@ -137,7 +134,7 @@ summary_list <- list(
 # Summary of Model Performances
 performance_summary <- data.frame(
   Model = c("Random Forest", "Neural Network", "KNN", "Linear Regression", "Decision Tree", "KNN Regression"),
-  Misclassification_Rate = c(misclassRate_rf, misclassRate_nn, misclassRate_knn, NA, NA, NA),
+  Misclassification_Rate = c(misclassRate_rf, misclassRate_nn, misclassRate_knn, rmse_lm, rmse_tree, rmse_knn_reg),
   RMSE = c(NA, NA, NA, rmse_lm, rmse_tree, rmse_knn_reg)
 )
 
@@ -151,6 +148,10 @@ calculate_profit <- function(predictions, actual, cost_per_mail = 2, avg_donatio
 profit_rf <- calculate_profit(predictions_rf, testing_set$donr)
 profit_nn <- calculate_profit(predictions_nn, testing_set$donr)
 profit_knn <- calculate_profit(predictions_knn, testing_set$donr)
+profit_knn <- calculate_profit(predictions_lm, testing_set$donr)
+profit_knn <- calculate_profit(predictions_tree, testing_set$donr)
+profit_knn <- calculate_profit(predictions_knn_reg, testing_set$donr)
+
 
 # Output Evaluation Results
 cat("Misclassification Rates:\n")
