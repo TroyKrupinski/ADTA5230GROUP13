@@ -1,3 +1,5 @@
+#Author: Troy Krupinski
+
 # Checking for missing values in the dataset
 missing_values = data.isnull().sum()
 
