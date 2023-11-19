@@ -233,7 +233,7 @@ score_data_processed <- score_data %>%
 
 # Predicting DONR for score data using Classification Models
 score_predictions_rf <- predict(rf_model, score_data_processed[, predictors])
-score_predictions_nn <- predict(nn_model, score_data_processed[, predictors])
+score_predictions_nn <- predict(nn_model, score_data_processed[, predictors], type = "raw")
 score_predictions_nn <- factor(ifelse(score_predictions_nn > 0.5, "1", "0"), levels = c("0", "1"))
 score_predictions_knn <- predict(knn_model, score_data_processed[, predictors])
 
@@ -241,12 +241,23 @@ score_predictions_knn <- predict(knn_model, score_data_processed[, predictors])
 score_predictions_lm <- predict(lm_model, score_data_processed[, predictors])
 score_predictions_tree <- predict(tree_model, score_data_processed[, predictors])
 
+
+# Adjusting negative predictions from Regression Models to zero
+score_predictions_lm <- pmax(predict(lm_model, score_data_processed[, predictors]), 0)
+score_predictions_tree <- pmax(predict(tree_model, score_data_processed[, predictors]), 0)
+
 # Calculate Expected Profits from Classification Models
-expected_profit_rf <- calculate_profit(score_predictions_rf, "1", 2, 14.50)
-expected_profit_nn <- calculate_profit(score_predictions_nn, "1", 2, 14.50)
-expected_profit_knn <- calculate_profit(score_predictions_knn, "1", 2, 14.50)
-expected_profit_lm <- calculate_profit(score_predictions_lm, "1", 2, 14.50)
-expected_profit_tree <- calculate_profit(score_predictions_tree, "1", 2, 14.50)
+calculate_expected_profit <- function(probabilities, avg_donation = 14.50, cost_per_mail = 2) {
+    # Calculate expected profit based on probabilities of being a donor
+    expected_profit <- sum(probabilities * avg_donation) - length(probabilities) * cost_per_mail
+    return(expected_profit)
+}
+
+expected_profit_rf <- calculate_expected_profit(score_predictions_rf[, "1"])
+expected_profit_nn <- calculate_expected_profit(score_predictions_nn)
+expected_profit_knn <- calculate_expected_profit(score_predictions_knn[, "1"])
+expected_profit_lm <- sum(score_predictions_lm) - length(score_predictions_lm) * 2
+expected_profit_tree <- sum(score_predictions_tree) - length(score_predictions_tree) * 2
 
 # Display Expected Profits
 cat("Expected Profits from Classification Models:\n")
@@ -277,25 +288,28 @@ if (!require(pROC)) install.packages("pROC")
 library(pROC)
 
 # ---------------------
-# 1. ROC Curves for Classification Models
+if (rf_model$modelType == "Classification") {
+    rf_probabilities <- predict(rf_model, testing_set[, predictors], type = "prob")[, "1"]
+    roc_rf <- roc(response = testing_set$donr, predictor = rf_probabilities)
+    plot(roc_rf, col = "blue", main = "ROC Curves", lwd = 2)
+}
 
-rf_probabilities <- predict(rf_model, testing_set[, predictors], type = "prob")[, "1"]
-roc_rf <- roc(response = testing_set$donr, predictor = rf_probabilities)
+if (nn_model$modelType == "Classification") {
+    nn_probabilities <- predict(nn_model, testing_set[, predictors], type = "raw")
+    roc_nn <- roc(response = testing_set$donr, predictor = nn_probabilities)
+    plot(roc_nn, col = "red", add = TRUE, lwd = 2)
+}
 
-# Neural Network - Predicting Probabilities
-nn_probabilities <- predict(nn_model, testing_set[, predictors], type = "raw")
-roc_nn <- roc(response = testing_set$donr, predictor = nn_probabilities)
+if (knn_model$modelType == "Classification") {
+    knn_probabilities <- predict(knn_model, testing_set[, predictors], type = "prob")[, "1"]
+    roc_knn <- roc(response = testing_set$donr, predictor = knn_probabilities)
+    plot(roc_knn, col = "green", add = TRUE, lwd = 2)
+}
 
-# K-Nearest Neighbors - Predicting Probabilities
-knn_probabilities <- predict(knn_model, testing_set[, predictors], type = "prob")[, "1"]
-roc_knn <- roc(response = testing_set$donr, predictor = knn_probabilities)
-
-# Plotting ROC Curves
-plot(roc_rf, col = "blue", main = "ROC Curves", lwd = 2)
-plot(roc_nn, col = "red", add = TRUE, lwd = 2)
-plot(roc_knn, col = "green", add = TRUE, lwd = 2)
-legend("bottomright", legend = c("Random Forest", "Neural Network", "KNN"),
-       col = c("blue", "red", "green"), lwd = 2)
+if (exists("roc_rf") | exists("roc_nn") | exists("roc_knn")) {
+    legend("bottomright", legend = c("Random Forest", "Neural Network", "KNN"),
+           col = c("blue", "red", "green"), lwd = 2)
+}
 
 # ---------------------
 # 2. Feature Importance for Random Forest
