@@ -1,4 +1,12 @@
-# Required Libraries
+#Author:
+#Troy Krupinski
+#ADTA 5230 Group 13
+
+# Required Libraries, you will need to install thesse.
+#Install R and RStudio. Go to RStudio's website if you haven't installed it already.
+#All of the EDA is taken care of.
+
+
 library(caret)
 library(dplyr)
 library(ggplot2)
@@ -10,7 +18,7 @@ library(readxl)    # For reading Excel files
 library(tidyr)     # For one-hot encoding
 
 # Setting Working Directory and Checking File Existence
-setwd('C:/Users/dunke/Downloads/')
+setwd('C:/Users/dunke/Downloads/') #Add your own path here that contains the data you got from Canvas
 train_file_path <- "nonprofit.xlsx"
 score_file_path <- "nonprofit_score.xlsx"
 
@@ -39,11 +47,62 @@ if("ID" %in% names(train_data)) {
     train_data <- select(train_data, -ID)
 }
 
-# Distribution of Key Variables
+# EDA for all variables
+
+# Wealth Rating Distribution
 hist(train_data$wlth, main = "Wealth Rating Distribution", xlab = "Wealth Rating")
+
+# Home Value Distribution
 hist(train_data$hv, main = "Home Value Distribution", xlab = "Home Value in $ Thousands")
+
+# Median Income by Region
 boxplot(train_data$incmed ~ train_data$region, main = "Median Income by Region", ylab = "Income in $ Thousands")
+
+# Average Gift Amount by Gender
 boxplot(train_data$gifa ~ train_data$sex, main = "Average Gift Amount by Gender", ylab = "Average Gift Amount")
+
+# Number of Children Distribution
+hist(train_data$kids, main = "Number of Children Distribution", xlab = "Number of Children")
+
+# Household Income Distribution
+hist(train_data$inc, main = "Household Income Distribution", xlab = "Income Category")
+
+# Wealth Rating Distribution
+hist(train_data$wlth, main = "Wealth Rating Distribution", xlab = "Wealth Rating")
+
+# Average Home Value Distribution
+hist(train_data$hv, main = "Average Home Value Distribution", xlab = "Home Value in $ Thousands")
+
+# Median Family Income Distribution
+hist(train_data$incmed, main = "Median Family Income Distribution", xlab = "Median Income in $ Thousands")
+
+# Average Family Income Distribution
+hist(train_data$incavg, main = "Average Family Income Distribution", xlab = "Average Income in $ Thousands")
+
+# Low Income Percent Distribution
+hist(train_data$low, main = "Low Income Percent Distribution", xlab = "Low Income Percent")
+
+# Lifetime Promotions Distribution
+hist(train_data$npro, main = "Lifetime Promotions Distribution", xlab = "Number of Promotions")
+
+# Dollar Amount of Lifetime Gifts Distribution
+hist(train_data$gifdol, main = "Lifetime Gifts Amount Distribution", xlab = "Gift Amount")
+
+# Dollar Amount of Largest Gift Distribution
+hist(train_data$gifl, main = "Largest Gift Amount Distribution", xlab = "Largest Gift Amount")
+
+# Dollar Amount of Most Recent Gift Distribution
+hist(train_data$gifr, main = "Most Recent Gift Amount Distribution", xlab = "Most Recent Gift Amount")
+
+# Number of Months Since Last Donation Distribution
+hist(train_data$mdon, main = "Months Since Last Donation Distribution", xlab = "Months Since Last Donation")
+
+# Number of Months Between First and Second Gift Distribution
+hist(train_data$lag, main = "Months Between First and Second Gift", xlab = "Months Between Gifts")
+
+# Average Gift Amount Distribution
+hist(train_data$gifa, main = "Average Gift Amount Distribution", xlab = "Average Gift Amount")
+
 # Splitting Data into Training and Testing Sets
 set.seed(123)
 splitIndex <- createDataPartition(train_data$donr, p = .80, list = FALSE)
@@ -86,19 +145,33 @@ lm_model <- lm(damt ~ ., data = training_set[, c(predictors, response_reg)])
 # Decision Tree (Regression)
 tree_model <- rpart(damt ~ ., data = training_set[, c(predictors, response_reg)])
 
-# K-Nearest Neighbors (Regression)
-
-
 # Evaluation for Classification Models
-predictions_rf <- predict(rf_model, testing_set)
+#CALCULATE PROFIT FUNCTION ----- THIS FUNCTION IS THE BASIS OF THE PROJECT
+calculate_profit <- function(predictions, actual, cost_per_mail = 2, avg_donation = 14.50) {
+  profit_per_response = avg_donation - cost_per_mail
+  total_profit = sum(predictions == actual & actual == 1) * profit_per_response - sum(predictions == 1) * cost_per_mail
+  return(total_profit)
+}
+# ---------------------------------------------------------------------------------------
+# Ensure Factor Levels for Classification Predictions
+testing_set$donr <- factor(testing_set$donr, levels = c("0", "1"))
+predictions_rf <- factor(predict(rf_model, testing_set[, predictors]), levels = c("0", "1"))
+predictions_nn <- predict(nn_model, testing_set[, predictors])
+predictions_nn <- factor(ifelse(predictions_nn > 0.5, "1", "0"), levels = c("0", "1"))
+predictions_knn <- factor(predict(knn_model, testing_set[, predictors]), levels = c("0", "1"))
+
+# Confusion Matrix and Profit Calculation for Classification Models
 confMatrix_rf <- confusionMatrix(predictions_rf, testing_set$donr)
 misclassRate_rf <- 1 - confMatrix_rf$overall['Accuracy']
+profit_rf <- calculate_profit(predictions_rf, testing_set$donr)
 
-predictions_nn <- predict(nn_model, testing_set[, predictors])
-confMatrix_nn <- confusionMatrix(as.factor(ifelse(predictions_nn > 0.5, 1, 0)), testing_set$donr)
+confMatrix_nn <- confusionMatrix(predictions_nn, testing_set$donr)
 misclassRate_nn <- 1 - confMatrix_nn$overall['Accuracy']
+profit_nn <- calculate_profit(predictions_nn, testing_set$donr)
 
-
+confMatrix_knn <- confusionMatrix(predictions_knn, testing_set$donr)
+misclassRate_knn <- 1 - confMatrix_knn$overall['Accuracy']
+profit_knn <- calculate_profit(predictions_knn, testing_set$donr)
 
 # Evaluation for Regression Models
 predictions_lm <- predict(lm_model, testing_set)
@@ -109,15 +182,15 @@ rmse_tree <- RMSE(predictions_tree, testing_set$damt)
 
 
 
-# Output Summary
-summary_list <- list(
-    Random_Forest_Accuracy = 1 - misclassRate_rf,
-    Neural_Network_Accuracy = 1 - misclassRate_nn,
-    KNN_Classification_Accuracy = 1 - misclassRate_knn,
-    Linear_Regression_RMSE = rmse_lm,
-    Decision_Tree_RMSE = rmse_tree,
+# Output Summary to implement
+#summary_list <- list(
+#    Random_Forest_Accuracy = 1 - misclassRate_rf,
+#    Neural_Network_Accuracy = 1 - misclassRate_nn,
+#    KNN_Classification_Accuracy = 1 - misclassRate_knn,
+#    Linear_Regression_RMSE = rmse_lm,
+#    Decision_Tree_RMSE = rmse_tree,
 
-)
+#)
 
 # Summary of Model Performances
 performance_summary <- data.frame(
@@ -126,19 +199,47 @@ performance_summary <- data.frame(
   RMSE = c(NA, NA, NA, rmse_lm, rmse_tree, NA)
 )
 
-# Business Profitability Evaluation
-calculate_profit <- function(predictions, actual, cost_per_mail = 2, avg_donation = 14.50) {
-  profit_per_response = avg_donation - cost_per_mail
-  total_profit = sum(predictions == actual & actual == 1) * profit_per_response - sum(predictions == 1) * cost_per_mail
-  return(total_profit)
-}
+# Business Profitability Evaluation, duplicate code for stability.
+
 
 profit_rf <- calculate_profit(predictions_rf, testing_set$donr)
 profit_nn <- calculate_profit(predictions_nn, testing_set$donr)
 profit_knn <- calculate_profit(predictions_knn, testing_set$donr)
 profit_lm <- calculate_profit(predictions_lm, testing_set$donr)
 profit_tree <- calculate_profit(predictions_tree, testing_set$donr)
+#First results, reworked.):
 
+# Prediction and Profitability Evaluation on Score Data
+score_data_processed <- score_data %>%
+                        mutate_if(is.factor, as.factor) %>%
+                        pivot_wider(names_from = region, values_from = region,
+                                    values_fn = length, values_fill = list(region = 0)) %>%
+                        mutate(across(everything(), as.numeric))
+
+# Predicting DONR for score data using Classification Models
+score_predictions_rf <- predict(rf_model, score_data_processed[, predictors])
+score_predictions_nn <- predict(nn_model, score_data_processed[, predictors])
+score_predictions_nn <- factor(ifelse(score_predictions_nn > 0.5, "1", "0"), levels = c("0", "1"))
+score_predictions_knn <- predict(knn_model, score_data_processed[, predictors])
+
+# Predicting DAMT for score data using Regression Models
+score_predictions_lm <- predict(lm_model, score_data_processed[, predictors])
+score_predictions_tree <- predict(tree_model, score_data_processed[, predictors])
+
+# Calculate Expected Profits from Classification Models
+expected_profit_rf <- calculate_profit(score_predictions_rf, "1", 2, 14.50)
+expected_profit_nn <- calculate_profit(score_predictions_nn, "1", 2, 14.50)
+expected_profit_knn <- calculate_profit(score_predictions_knn, "1", 2, 14.50)
+
+# Display Expected Profits
+cat("Expected Profits from Classification Models:\n")
+cat("Random Forest: ", expected_profit_rf, "\nNeural Network: ", expected_profit_nn, "\nKNN: ", expected_profit_knn, "\n\n")
+
+# Display Average Predicted Donation Amounts from Regression Models
+avg_donation_lm <- mean(score_predictions_lm)
+avg_donation_tree <- mean(score_predictions_tree)
+cat("Average Predicted Donation Amounts:\n")
+cat("Linear Regression: ", avg_donation_lm, "\nDecision Tree: ", avg_donation_tree, "\n")
 
 # Output Evaluation Results
 cat("Misclassification Rates:\n")
