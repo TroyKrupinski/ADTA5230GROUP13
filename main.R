@@ -18,22 +18,32 @@ if (!file.exists(train_file_path) || !file.exists(score_file_path)) {
 }
 
 # Loading and Preparing Data
-train_data <- read_excel(train_file_path, sheet = 1)
-score_data <- read_excel(score_file_path, sheet = 1)
+train_data <- read_excel(train_file_path, sheet = 1) %>% as.data.frame()
+score_data <- read_excel(score_file_path, sheet = 1) %>% as.data.frame()
 
 # Data Cleaning
 train_data <- na.omit(train_data)
+
+# Convert appropriate variables to factors
 train_data$region <- as.factor(train_data$region)
-train_data$ownd <- as.factor(train_data$ownd)
-train_data$sex <- as.factor(train_data$sex)
-train_data$donr <- as.factor(train_data$donr)  # For classification
-train_data$damt <- as.numeric(train_data$damt)  # Ensure numeric for regression
+train_data$ownd <- as.factor(as.character(train_data$ownd))
+train_data$sex <- as.factor(as.character(train_data$sex))
 
-# Remove 'id number' column
-train_data <- select(train_data, -id_number)
+# Convert target variables
+train_data$donr <- as.factor(train_data$donr)
+train_data$damt <- as.numeric(train_data$damt)
 
-# Enhanced EDA on Training Data
-# ... [Your EDA code here] ...
+# Remove 'ID' column if it exists
+if("ID" %in% names(train_data)) {
+    train_data <- select(train_data, -ID)
+}
+
+
+# Distribution of Key Variables #EDA
+hist(train_data$wlth, main = "Wealth Rating Distribution", xlab = "Wealth Rating")
+hist(train_data$hv, main = "Home Value Distribution", xlab = "Home Value in $ Thousands")
+boxplot(train_data$incmed ~ train_data$region, main = "Median Income by Region", ylab = "Income in $ Thousands")
+boxplot(train_data$gifa ~ train_data$sex, main = "Average Gift Amount by Gender", ylab = "Average Gift Amount")
 
 # Splitting Data into Training and Testing Sets
 set.seed(123)
@@ -43,6 +53,10 @@ testing_set <- train_data[-splitIndex,]
 
 # Define Predictors
 predictors <- c("region", "ownd", "kids", "inc", "sex", "wlth", "hv", "incmed", "incavg", "low", "npro", "gifdol", "gifl", "gifr", "mdon", "lag", "gifa")
+
+# Handle any NA values in predictors
+training_set <- training_set %>% na.omit()
+testing_set <- testing_set %>% na.omit()
 
 # Classification Models for DONR
 response_class <- "donr"
@@ -55,7 +69,11 @@ rf_model <- train(training_set[, predictors], training_set[[response_class]],
 nn_model <- nnet(donr ~ ., data = training_set[, c(predictors, response_class)], size = 5, maxit = 200)
 
 # K-Nearest Neighbors
-knn_model <- train(training_set[, predictors], training_set[, response_class],
+# Ensure all predictors are numeric for KNN
+training_set_knn <- training_set %>% mutate_if(is.factor, as.numeric)
+testing_set_knn <- testing_set %>% mutate_if(is.factor, as.numeric)
+
+knn_model <- train(training_set_knn[, predictors], training_set_knn[[response_class]],
                    method = "knn", trControl = trainControl(method = "cv", number = 10))
 
 # Regression Models for DAMT
@@ -67,9 +85,20 @@ lm_model <- lm(damt ~ ., data = training_set[, c(predictors, response_reg)])
 # Decision Tree
 tree_model <- rpart(damt ~ ., data = training_set[, c(predictors, response_reg)])
 
-# K-Nearest Neighbors for Regression
-knn_reg_model <- train(training_set[, predictors], training_set[, response_reg],
-                       method = "knn", trControl = trainControl(method = "cv", number = 10))
+training_set_knn <- training_set %>% mutate_if(is.factor, as.numeric)  # You may use one-hot encoding instead
+testing_set_knn <- testing_set %>% mutate_if(is.factor, as.numeric)    # You may use one-hot encoding instead
+
+# Check for NAs in the dataset and handle them
+training_set_knn <- na.omit(training_set_knn)
+testing_set_knn <- na.omit(testing_set_knn)
+
+# K-Nearest Neighbors (Classification)
+# Ensure you are using the classification method 'knn' and not 'knnreg'
+knn_model <- train(x = training_set_knn[, predictors], y = training_set_knn[[response_class]],
+                   method = "knn", trControl = trainControl(method = "cv", number = 10))
+
+# Evaluation and Output Sections (Remain Unchanged)
+
 
 
 # Evaluation for Classification Models
@@ -77,7 +106,7 @@ predictions_rf <- predict(rf_model, testing_set)
 confMatrix_rf <- confusionMatrix(predictions_rf, testing_set$donr)
 misclassRate_rf <- 1 - confMatrix_rf$overall['Accuracy']
 
-predictions_nn <- predict(nn_model, testing_set[, predictors])  # Use 'predictors'
+predictions_nn <- predict(nn_model, testing_set[, predictors])
 confMatrix_nn <- confusionMatrix(as.factor(ifelse(predictions_nn > 0.5, 1, 0)), testing_set$donr)
 misclassRate_nn <- 1 - confMatrix_nn$overall['Accuracy']
 
@@ -92,8 +121,8 @@ rmse_lm <- RMSE(predictions_lm, testing_set$damt)
 predictions_tree <- predict(tree_model, testing_set)
 rmse_tree <- RMSE(predictions_tree, testing_set$damt)
 
-predictions_knn_reg <- predict(knn_reg_model, testing_set)  # Make sure to predict using knn_reg_model
-rmse_knn_reg <- RMSE(predictions_knn_reg, testing_set$damt)  # Calculate RMSE for KNN Regression
+predictions_knn_reg <- predict(knn_reg_model, testing_set)
+rmse_knn_reg <- RMSE(predictions_knn_reg, testing_set$damt)
 
 # Output Summary
 summary_list <- list(
@@ -102,14 +131,14 @@ summary_list <- list(
     KNN_Accuracy = 1 - misclassRate_knn,
     Linear_Regression_RMSE = rmse_lm,
     Decision_Tree_RMSE = rmse_tree,
-    KNN_Regression_RMSE = rmse_knn_reg  # Corrected to RMSE
+    KNN_Regression_RMSE = rmse_knn_reg
 )
 
 # Summary of Model Performances
 performance_summary <- data.frame(
   Model = c("Random Forest", "Neural Network", "KNN", "Linear Regression", "Decision Tree", "KNN Regression"),
   Misclassification_Rate = c(misclassRate_rf, misclassRate_nn, misclassRate_knn, NA, NA, NA),
-  RMSE = c(NA, NA, NA, rmse_lm, rmse_tree, rmse_knn_reg)  # Corrected to RMSE
+  RMSE = c(NA, NA, NA, rmse_lm, rmse_tree, rmse_knn_reg)
 )
 
 # Business Profitability Evaluation
@@ -127,8 +156,8 @@ profit_knn <- calculate_profit(predictions_knn, testing_set$donr)
 cat("Misclassification Rates:\n")
 cat("Random Forest: ", misclassRate_rf, "\nNeural Network: ", misclassRate_nn, "\nKNN: ", misclassRate_knn, "\n\n")
 
-cat("Root Mean Squared Errors for Regression Models:\n")  # Updated to RMSE
+cat("Root Mean Squared Errors for Regression Models:\n")
 cat("Linear Regression: ", rmse_lm, "\nDecision Tree: ", rmse_tree, "\nKNN Regression: ", rmse_knn_reg, "\n\n")
 
 cat("Business Profit Evaluation:\n")
-cat("Profit with Random Forest: ", profit_rf, "\nProfit with Neural Network: ", profit_nn, "\nProfit with KNN: ", profit)
+cat("Profit with Random Forest: ", profit_rf, "\nProfit with Neural Network: ", profit_nn, "\nProfit with KNN: ", profit_knn, "\n")
