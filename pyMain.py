@@ -8,6 +8,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score, accuracy_score, precision_score, recall_score, f1_score, r2_score, mean_squared_error
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -24,9 +25,14 @@ file_path = 'nonprofit.xlsx'
 data = pd.read_excel(file_path)
 
 # Basic descriptive statistics
-print(data.describe())
+print("Descriptive Statistics:")
+for column in data.columns:
+    print(f"Column: {column}")
+    print(data[column].describe())
+    print()
 
 # Visualizing distributions of key variables
+
 sns.pairplot(data[['ownd', 'kids', 'inc', 'sex', 'wlth', 'hv', 'incmed', 'incavg', 'low', 'npro', 'gifdol', 'gifl', 'gifr', 'mdon', 'lag', 'gifa', 'donr', 'damt']])
 plt.show()
 
@@ -75,9 +81,14 @@ models = {
     },
     'MLPClassifier': {
         'model': MLPClassifier(random_state=42),
-        'params': {'hidden_layer_sizes': [(50,), (100,)], 'activation': ['relu', 'tanh']}
+        'params': {'hidden_layer_sizes': [(50,), (100,), (50, 50)], 'activation': ['relu', 'tanh'], 'max_iter': [200, 300]}
+    },
+    'KNeighborsClassifier': {
+        'model': KNeighborsClassifier(),
+        'params': {'n_neighbors': [5, 10, 15], 'weights': ['uniform', 'distance']}
     }
 }
+
 
 # Placeholder for best models and scores
 best_models = {}
