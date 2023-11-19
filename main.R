@@ -230,6 +230,8 @@ score_predictions_tree <- predict(tree_model, score_data_processed[, predictors]
 expected_profit_rf <- calculate_profit(score_predictions_rf, "1", 2, 14.50)
 expected_profit_nn <- calculate_profit(score_predictions_nn, "1", 2, 14.50)
 expected_profit_knn <- calculate_profit(score_predictions_knn, "1", 2, 14.50)
+expected_profit_lm <- calculate_profit(score_predictions_lm, "1", 2, 14.50)
+expected_profit_tree <- calculate_profit(score_predictions_tree, "1", 2, 14.50)
 
 # Display Expected Profits
 cat("Expected Profits from Classification Models:\n")
@@ -249,6 +251,6 @@ cat("Root Mean Squared Errors for Regression Models:\n")
 cat("Linear Regression: ", rmse_lm, "\nDecision Tree: ", rmse_tree, "\n\n")
 
 cat("Business Profit Evaluation:\n")
-cat("Profit with Random Forest: ", profit_rf, "\nProfit with Neural Network: ", profit_nn,
-    "\nProfit with KNN Classification: ", profit_knn, "\nProfit with Linear Regression: ", profit_lm,
-    "\nProfit with Decision Tree: ", profit_tree, "\n")
+cat("Profit with Random Forest: ", expected_profit_rf, "\nProfit with Neural Network: ", expected_profit_nn
+    "\nProfit with KNN Classification: ", expected_profit_knn, "\nProfit with Linear Regression: ", expected_profit_lm,
+    "\nProfit with Decision Tree: ", expected_profit_tree, "\n")
