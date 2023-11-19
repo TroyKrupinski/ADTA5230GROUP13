@@ -26,6 +26,9 @@ train_data <- na.omit(train_data)
 train_data$region <- as.factor(train_data$region)
 train_data$ownd <- as.factor(train_data$ownd)
 train_data$sex <- as.factor(train_data$sex)
+train_data$donr <- as.factor(train_data$donr)  # Convert to factor for classification
+
+# Check if 'damt' is suitable for regression here
 
 head(train_data)
 
@@ -48,14 +51,15 @@ predictors_class <- c("region", "ownd", "kids", "inc", "sex", "wlth", "hv", "inc
 response_class <- "donr"
 
 # Random Forest
-# Random Forest
-rf_model <- train(training_set[, predictors_class], training_set[[response_class]], method = "rf", trControl = trainControl(method = "cv", number = 10))
+rf_model <- train(training_set[, predictors_class], training_set[[response_class]],
+                  method = "rf", trControl = trainControl(method = "cv", number = 10))
 
 # Neural Network
 nn_model <- nnet(donr ~ ., data = training_set[, c(predictors_class, response_class)], size = 5, maxit = 200)
 
 # K-Nearest Neighbors
-knn_model <- train(training_set[, predictors_class], training_set[, response_class], method = "knn", trControl = trainControl(method = "cv", number = 10))
+knn_model <- train(training_set[, predictors_class], training_set[, response_class],
+                   method = "knn", trControl = trainControl(method = "cv", number = 10))
 
 # Prediction Models for DAMT
 predictors_reg <- c("region", "ownd", "kids", "inc", "sex", "wlth", "hv", "incmed", "incavg", "low", "npro", "gifdol", "gifl", "gifr", "mdon", "lag", "gifa")
@@ -68,7 +72,8 @@ lm_model <- lm(damt ~ ., data = training_set[, c(predictors_reg, response_reg)])
 tree_model <- rpart(damt ~ ., data = training_set[, c(predictors_reg, response_reg)])
 
 # K-Nearest Neighbors for Regression
-knn_reg_model <- train(training_set[, predictors_reg], training_set[, response_reg], method = "knn", trControl = trainControl(method = "cv", number = 10))
+knn_reg_model <- train(training_set[, predictors_reg], training_set[, response_reg],
+                       method = "knn", trControl = trainControl(method = "cv", number = 10))
 
 # Evaluation for Classification Models
 predictions_rf <- predict(rf_model, testing_set)
@@ -88,7 +93,7 @@ predictions_lm <- predict(lm_model, testing_set)
 rmse_lm <- RMSE(predictions_lm, testing_set$damt)
 
 predictions_tree <- predict(tree_model, testing_set)
-rmse_knn_reg <- RMSE(predictions_knn_reg, testing_set$damt)
+rmse_tree <- RMSE(predictions_tree, testing_set$damt)  # Corrected line for decision tree RMSE
 
 # Output Summary
 summary_list <- list(
@@ -99,12 +104,6 @@ summary_list <- list(
     Decision_Tree_RMSE = rmse_tree,
     KNN_Regression_RMSE = rmse_knn_reg
 )
-
-summary_list
-
-
-
-
 
 # Summary of Model Performances
 performance_summary <- data.frame(
