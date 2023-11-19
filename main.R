@@ -7,6 +7,7 @@
 #All of the EDA is taken care of.
 
 
+# Required Libraries
 library(caret)
 library(dplyr)
 library(ggplot2)
@@ -16,6 +17,20 @@ library(class)     # For KNN
 library(rpart)     # For Decision Trees
 library(readxl)    # For reading Excel files
 library(tidyr)     # For one-hot encoding
+library(pROC)      # For ROC curve analysis
+library(plotly)    # For interactive plots
+library(RColorBrewer) # For additional color options in plots (optional)
+
+# These will install the packages necessary.
+required_packages <- c("caret", "dplyr", "ggplot2", "randomForest", "nnet", "class", "rpart",
+                       "readxl", "tidyr", "pROC", "plotly", "RColorBrewer")
+new_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+
+# Load the installed packages
+lapply(required_packages, require, character.only = TRUE)
+
+
 
 # Setting Working Directory and Checking File Existence
 setwd('C:/Users/dunke/Downloads/') #Add your own path here that contains the data you got from Canvas
@@ -254,3 +269,64 @@ cat("Business Profit Evaluation:\n")
 cat("Profit with Random Forest: ", expected_profit_rf, "\nProfit with Neural Network: ", expected_profit_nn,
     "\nProfit with KNN Classification: ", expected_profit_knn, "\nProfit with Linear Regression: ", expected_profit_lm,
     "\nProfit with Decision Tree: ", expected_profit_tree, "\n")
+
+# ... [Previous code] ...
+
+# Install necessary additional packages
+if (!require(pROC)) install.packages("pROC")
+library(pROC)
+
+# ---------------------
+# 1. ROC Curves for Classification Models
+roc_rf <- roc(response = testing_set$donr, predictor = as.numeric(predictions_rf))
+roc_nn <- roc(response = testing_set$donr, predictor = as.numeric(predictions_nn))
+roc_knn <- roc(response = testing_set$donr, predictor = as.numeric(predictions_knn))
+
+# Plotting ROC Curves
+plot(roc_rf, col = "blue", main = "ROC Curves", lwd = 2)
+plot(roc_nn, col = "red", add = TRUE, lwd = 2)
+plot(roc_knn, col = "green", add = TRUE, lwd = 2)
+legend("bottomright", legend = c("Random Forest", "Neural Network", "KNN"),
+       col = c("blue", "red", "green"), lwd = 2)
+
+# ---------------------
+# 2. Feature Importance for Random Forest
+importance_rf <- varImp(rf_model)
+plot(importance_rf)
+
+# ---------------------
+# 3. Decision Surface for K-NN (using first two predictors as an example)
+# Note: This is a simplified representation and may not reflect the high dimensionality of the actual model
+# Install necessary package
+if (!require(plotly)) install.packages("plotly")
+library(plotly)
+
+feature1 <- predictors[1]
+feature2 <- predictors[2]
+
+plot_knn <- ggplot(training_set, aes_string(x = feature1, y = feature2, color = "donr")) +
+  geom_point(alpha = 0.7) +
+  scale_color_manual(values = c("0" = "red", "1" = "blue")) +
+  labs(title = "K-NN Decision Surface", x = feature1, y = feature2)
+ggplotly(plot_knn)
+
+# ---------------------
+# 4. Neural Network Performance (Misclassification Rate vs. Threshold)
+thresholds <- seq(0, 1, by = 0.01)
+misclass_rates <- sapply(thresholds, function(t) {
+  pred <- factor(ifelse(as.numeric(predictions_nn) > t, "1", "0"), levels = c("0", "1"))
+  mean(pred != testing_set$donr)
+})
+
+plot(thresholds, misclass_rates, type = "l", col = "blue",
+     xlab = "Threshold", ylab = "Misclassification Rate",
+     main = "NN Performance")
+
+# ---------------------
+# 5. Histograms of Predicted Probabilities
+# For Random Forest (example)
+prob_rf <- predict(rf_model, testing_set[, predictors], type = "prob")
+hist(prob_rf[, "1"], main = "Predicted Probabilities - Random Forest", xlab = "Probability", col = "blue", breaks = 30)
+
+# ... [Rest of your script] ...
+
