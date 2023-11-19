@@ -278,9 +278,17 @@ library(pROC)
 
 # ---------------------
 # 1. ROC Curves for Classification Models
-roc_rf <- roc(response = testing_set$donr, predictor = as.numeric(predictions_rf))
-roc_nn <- roc(response = testing_set$donr, predictor = as.numeric(predictions_nn))
-roc_knn <- roc(response = testing_set$donr, predictor = as.numeric(predictions_knn))
+
+rf_probabilities <- predict(rf_model, testing_set[, predictors], type = "prob")[, "1"]
+roc_rf <- roc(response = testing_set$donr, predictor = rf_probabilities)
+
+# Neural Network - Predicting Probabilities
+nn_probabilities <- predict(nn_model, testing_set[, predictors], type = "raw")
+roc_nn <- roc(response = testing_set$donr, predictor = nn_probabilities)
+
+# K-Nearest Neighbors - Predicting Probabilities
+knn_probabilities <- predict(knn_model, testing_set[, predictors], type = "prob")[, "1"]
+roc_knn <- roc(response = testing_set$donr, predictor = knn_probabilities)
 
 # Plotting ROC Curves
 plot(roc_rf, col = "blue", main = "ROC Curves", lwd = 2)
@@ -324,9 +332,7 @@ plot(thresholds, misclass_rates, type = "l", col = "blue",
 
 # ---------------------
 # 5. Histograms of Predicted Probabilities
-# For Random Forest (example)
 prob_rf <- predict(rf_model, testing_set[, predictors], type = "prob")
 hist(prob_rf[, "1"], main = "Predicted Probabilities - Random Forest", xlab = "Probability", col = "blue", breaks = 30)
 
-# ... [Rest of your script] ...
 
