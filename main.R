@@ -251,6 +251,6 @@ cat("Root Mean Squared Errors for Regression Models:\n")
 cat("Linear Regression: ", rmse_lm, "\nDecision Tree: ", rmse_tree, "\n\n")
 
 cat("Business Profit Evaluation:\n")
-cat("Profit with Random Forest: ", expected_profit_rf, "\nProfit with Neural Network: ", expected_profit_nn
+cat("Profit with Random Forest: ", expected_profit_rf, "\nProfit with Neural Network: ", expected_profit_nn,
     "\nProfit with KNN Classification: ", expected_profit_knn, "\nProfit with Linear Regression: ", expected_profit_lm,
     "\nProfit with Decision Tree: ", expected_profit_tree, "\n")
