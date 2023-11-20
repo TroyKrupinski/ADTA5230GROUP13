@@ -22,7 +22,7 @@ library(plotly)    # For interactive plots
 library(RColorBrewer) # For additional color options in plots (optional)
 
 # These will install the packages necessary.
-required_packages <- c("caret", "dplyr", "ggplot2", "randomForest", "nnet", "class", "rpart",
+required_packages <- c("caret", "dplyr", "ggplo2", "randomForest", "nnet", "class", "rpart",
                        "readxl", "tidyr", "pROC", "plotly", "RColorBrewer")
 new_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) install.packages(new_packages)
