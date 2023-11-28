@@ -19,6 +19,7 @@
 # To go through file progression, exit out of each window / graph window to continue to next step
 # For performance, comment out lines 81-94, as it's just EDA if you want to just look at the classifiers and regressions.
 
+#TODO FIND AND ASSOCIATE IDS
 
 import pandas as pd
 import numpy as np
@@ -212,14 +213,14 @@ def evaluate_model(model, X_test, y_test, model_name, is_classification=True):
         
         # Print classification metrics
         print(f"Model: {model_name}")
-        print(f"Accuracy: {accuracy:.2f}")
-        print(f"Precision: {precision:.2f}")
-        print(f"Recall: {recall:.2f}")
-        print(f"F1 Score: {f1:.2f}")
-        print(f"AUC Score: {auc_score:.2f}")
+        print(f"Accuracy: {accuracy:.6f}")
+        print(f"Precision: {precision:.6f}")
+        print(f"Recall: {recall:.6f}")
+        print(f"F1 Score: {f1:.6f}")
+        print(f"AUC Score: {auc_score:.6f}")
         print()
 
-        plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc_score:.2f})")
+        plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc_score:.6f})")
         plt.plot([0, 1], [0, 1], 'k--')
         plt.xlim([0.0, 1.0])
         plt.ylim([0.0, 1.05])
@@ -228,7 +229,7 @@ def evaluate_model(model, X_test, y_test, model_name, is_classification=True):
         plt.title(f"ROC Curve for {model_name}")
 
         # Add accuracy, precision, recall, and F1 score to the plot
-        plt.text(0.5, 0.2, f"Accuracy: {accuracy:.2f}\nPrecision: {precision:.2f}\nRecall: {recall:.2f}\nF1 Score: {f1:.2f}", 
+        plt.text(0.5, 0.2, f"Accuracy: {accuracy:.6f}\nPrecision: {precision:.6f}\nRecall: {recall:.6f}\nF1 Score: {f1:.6f}", 
                  horizontalalignment='center', verticalalignment='center', transform=plt.gca().transAxes)
 
         plt.legend(loc="lower right")
@@ -246,7 +247,7 @@ def evaluate_model(model, X_test, y_test, model_name, is_classification=True):
         r2 = r2_score(y_test, y_pred)
         mse = mean_squared_error(y_test, y_pred)
         print(f"Model: {model_name}")
-        print(f"R^2 Score: {r2:.2f}, Mean Squared Error: {mse:.2f}")
+        print(f"R^2 Score: {r2:.6f}, Mean Squared Error: {mse:.6f}")
         
         # Scatter plot of true values vs. predictions
         plt.scatter(y_test, y_pred)
@@ -298,24 +299,63 @@ print("Best Classification Model: " + best_classification_model[0] + " with scor
 print("Best Regression Model: " + best_regression_model[0] + " with score: " + str(best_regression_model[1]['score']))
 print("Best model overall = " + best_classification_model[0] + " with score: " + str(best_classification_model[1]['score']) + " and " + best_regression_model[0] + " with score: " + str(best_regression_model[1]['score']) + " in percent form: " + str(best_classification_model[1]['score']*100) + "%")
 # Calculate expected profit
-response_rate = 0.1
-average_donation = 14.50
-mailing_cost = 2.00
 
-expected_profit = (average_donation * response_rate) - mailing_cost
 
-# Correctly identifying the best overall model
+# Constants
+average_donation = 14.50  # average donation amount
+mailing_cost = 2.00       # cost per mailing
+response_rate = 0.10      # typical overall response rate
+
+# Assuming best_models is a dictionary with model names as keys and dictionaries with 'score' and 'model' as values
+
+# Finding the best models
 best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])
 best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])
 best_model = max(best_models.items(), key=lambda x: x[1]['score'])
+print("Best model by score: " + best_model[0] + " with score: " + str(best_model[1]['score']))
+print("Best model by score: " + best_model[0] + " with score: " + str(best_model[1]['score']) + " in percent form: " + str(best_model[1]['score']*100) + "%")
+# Profit calculation function
+def calculate_profit(predictions, precision=None, is_classification=True):
+    profit_per_donor = average_donation - mailing_cost
+    rows = len(predictions)
 
-# Profit calculation
-def calculate_profit(predictions, is_classification):
     if is_classification:
-        return (average_donation * response_rate * np.sum(predictions)) - (mailing_cost * len(predictions))
+        if precision is None:
+            raise ValueError("Precision must be provided for classification models")
+        true_donors = precision * rows
+        profit = true_donors * profit_per_donor
     else:
-        return (average_donation * response_rate * np.sum(predictions)) - (mailing_cost * len(predictions))
+        total_predicted_donations = sum(predictions)
+        profit = total_predicted_donations - (rows * mailing_cost)
 
+    return profit
+print("Expected profit from the best model: $", calculate_profit(best_model[1]['model'].predict(score_data_processed), True))
+
+# Example usage
+# predictions = [...]  # This should be your list/array of predictions
+# is_classification = True  # or False, depending on the type of model
+# profit = calculate_profit(predictions, is_classification)
+
+def get_model_precision(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    return precision_score(y_test, y_pred)
+
+ # Calculate and print profits for each model
+for model_name, model_info in best_models.items():
+    is_classification = 'Classifier' in model_name
+    model = model_info['model']
+    X_test = X_test_class if is_classification else X_test_reg
+    y_test = y_test_class if is_classification else y_test_reg
+    predictions = model.predict(X_test)
+
+    if is_classification:
+        precision = get_model_precision(model, X_test, y_test)
+        profit = calculate_profit(predictions, precision, True)
+    else:
+        profit = calculate_profit(predictions, is_classification=False)
+
+    print(f"Expected profit from {model_name}: ${profit:.4f}")   
+    
 classification_profit = calculate_profit(classification_predictions, True)
 regression_profit = calculate_profit(regression_predictions, False)
 best_model_predictions = best_model[1]['model'].predict(score_data_processed)
@@ -324,7 +364,7 @@ best_profit = calculate_profit(best_model_predictions, 'Classifier' in best_mode
 # Print the expected profits
 print("Expected profit from the best classification model: $", classification_profit)
 print("Expected profit from the best regression model: $", regression_profit)
-print("Best model prediction", best_model_predictions)
+print("Best model prediction", best_profit)
 if(regression_profit > classification_profit):
     print("The regression model is better than the classification model, and is the most profitable: $", regression_profit)
 else:
@@ -332,7 +372,9 @@ else:
 
 
 print("Model development and evaluation completed.")
+#IMPLEMENT THE FOLLOWING:
 
+#IMPLEMENT WRITING THIS TO NONPROFITSCORE
 
 
 
