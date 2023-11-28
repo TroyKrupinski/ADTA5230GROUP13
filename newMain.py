@@ -8,16 +8,16 @@
 
 # HOW TO USE:
 # Install Python 3.8.5 or any version of Python 3
-# Install the following libraries:
+# Install the following libraries using pip install:
 #   pandas
 #   sklearn
 #   matplotlib
 #   seaborn
 #   numpy
 #   xlsxwriter will be used to export the data to an excel file, and will be needed later. Not implemented.
+#   easygui will be used to display a message box.
 
 # To go through file progression, exit out of each window / graph window to continue to next step
-# For performance, comment out lines 81-94, as it's just EDA if you want to just look at the classifiers and regressions.
 
 #TODO FIND AND ASSOCIATE IDS
 
@@ -36,17 +36,17 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score, accuracy_score, precision_score, recall_score, f1_score, r2_score, mean_squared_error
 from sklearn.metrics import roc_curve, auc
-
-# importing easygui module
 from easygui import *
- 
+import warnings
+warnings.filterwarnings("ignore")
+
 ifEDA = False
 
 # message / information to be displayed on the screen
 message = "Would you like to show the EDA?"
  
 # title of the window
-title = "GfG - EasyGUI"
+title = "Troy Krupinski"
  
 # creating a yes no box
 output = ynbox(message, title)
@@ -190,7 +190,7 @@ classification_models = {
         'params': {'n_estimators': [50, 100], 'learning_rate': [0.1, 0.5]}
     },
     'LogisticRegression': {
-        'model': LogisticRegression(random_state=42),
+        'model': LogisticRegression(random_state=42, max_iter=1000),  # Increase max_iter
         'params': {'C': [0.1, 1, 10]}
     },
     'MLPClassifier': {
@@ -215,7 +215,7 @@ classification_models = {
 if 'ID' in X.columns:
     X = X.drop('ID', axis=1)
 
-# Define regression models
+# Define regression models, might remove
 regression_models = {
     'RandomForestRegressor': {
         'model': RandomForestRegressor(random_state=42),
@@ -233,12 +233,48 @@ regression_models = {
 }
 
 # Model fitting and tuning
+# ... [previous code remains unchanged]
+
+# Function to display feature importances
+def display_feature_importances(model, feature_names):
+    importances = None
+
+    if hasattr(model, 'feature_importances_'):
+        # For models that have feature_importances_ attribute
+        importances = model.feature_importances_
+    elif hasattr(model, 'coef_'):
+        # For models like LogisticRegression that use coefficients
+        importances = np.abs(model.coef_[0])
+    else:
+        # For models like MLPClassifier, which do not provide feature importances
+        print(f"Model {type(model).__name__} does not provide feature importances.")
+        return
+
+    # Create a DataFrame for visualization if importances are available
+    if importances is not None:
+        feature_importances = pd.DataFrame({'feature': feature_names, 'importance': importances})
+        feature_importances.sort_values(by='importance', ascending=False, inplace=True)
+
+        # Display the top features
+        print("Top features in the model, " + type(model).__name__ + ":")
+        print(feature_importances.head(10))
+
+# Model fitting and tuning
 best_models = {}
 for model_name, model_info in {**classification_models, **regression_models}.items():
     y_target = y_train_class if 'Classifier' in model_name else y_train_reg
     grid_search = GridSearchCV(model_info['model'], model_info['params'], cv=5, scoring='accuracy' if 'Classifier' in model_name else 'r2', n_jobs=-1)
     grid_search.fit(X_train_class if 'Classifier' in model_name else X_train_reg, y_target)
-    best_models[model_name] = {'model': grid_search.best_estimator_, 'score': grid_search.best_score_}
+    
+    best_model = grid_search.best_estimator_
+    best_models[model_name] = {'model': best_model, 'score': grid_search.best_score_}
+
+    # Get feature names after preprocessing
+    feature_names = preprocessor.get_feature_names_out()
+
+    # Display feature importances for the best model
+    display_feature_importances(best_model, feature_names)
+
 
 # --- Evaluation ---
 
@@ -340,7 +376,7 @@ score_data.to_csv('model_predictions.csv', index=False)
 # Summarize findings, discuss limitations, and suggest future work
 print("Best Classification Model: " + best_classification_model[0] + " with score: " + str(best_classification_model[1]['score']))
 print("Best Regression Model: " + best_regression_model[0] + " with score: " + str(best_regression_model[1]['score']))
-print("Best model overall = " + best_classification_model[0] + " with score: " + str(best_classification_model[1]['score']) + " and " + best_regression_model[0] + " with score: " + str(best_regression_model[1]['score']) + " in percent form: " + str(best_classification_model[1]['score']*100) + "%")
+print("Best model overall = " + best_classification_model[0] + " with score: " + str(best_classification_model[1]['score']) + " and the best regression model being " + best_regression_model[0] + " with score: " + str(best_regression_model[1]['score']))
 # Calculate expected profit
 
 
@@ -355,26 +391,28 @@ response_rate = 0.10      # typical overall response rate
 best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])
 best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])
 best_model = max(best_models.items(), key=lambda x: x[1]['score'])
-print("Best model by score: " + best_model[0] + " with score: " + str(best_model[1]['score']))
 print("Best model by score: " + best_model[0] + " with score: " + str(best_model[1]['score']) + " in percent form: " + str(best_model[1]['score']*100) + "%")
 # Profit calculation function
 def calculate_profit(predictions, precision=None, is_classification=True):
-    profit_per_donor = average_donation - mailing_cost
-    rows = len(predictions)
+    profit_per_donor = average_donation - mailing_cost # profit per donor
+    rows = len(predictions) # number of rows in the dataset
 
     if is_classification:
         if precision is None:
             raise ValueError("Precision must be provided for classification models")
-        true_donors = precision * rows
-        profit = true_donors * profit_per_donor
+        true_donors = precision * rows # precision (say .88 IE 88%) * rows (number of rows in the dataset
+        profit = true_donors * profit_per_donor # profit per donor * true_donors (precision * rows)
     else:
+        #Will most likely remove linear regressions from the model
         total_predicted_donations = sum(predictions)
         profit = total_predicted_donations - (rows * mailing_cost)
 
     return profit
-print("Expected profit from the best model: $", calculate_profit(best_model[1]['model'].predict(score_data_processed), True))
 
-# Example usage
+#print("Expected profit from the best model: $", calculate_profit(best_model[1]['model'].predict(score_data_processed), True))
+
+
+
 # predictions = [...]  # This should be your list/array of predictions
 # is_classification = True  # or False, depending on the type of model
 # profit = calculate_profit(predictions, is_classification)
@@ -383,8 +421,8 @@ def get_model_precision(model, X_test, y_test):
     y_pred = model.predict(X_test)
     return precision_score(y_test, y_pred)
 
- # Calculate and print profits for each model
-for model_name, model_info in best_models.items():
+# Calculate and print profits for each model
+for model_name, model_info in best_models.items(): #best_models.items() is a list of tuples, with the first element being the model name and the second element being the model info
     is_classification = 'Classifier' in model_name
     model = model_info['model']
     X_test = X_test_class if is_classification else X_test_reg
@@ -397,21 +435,35 @@ for model_name, model_info in best_models.items():
     else:
         profit = calculate_profit(predictions, is_classification=False)
 
-    print(f"Expected profit from {model_name}: ${profit:.4f}")   
-    
-classification_profit = calculate_profit(classification_predictions, True)
-regression_profit = calculate_profit(regression_predictions, False)
-best_model_predictions = best_model[1]['model'].predict(score_data_processed)
-best_profit = calculate_profit(best_model_predictions, 'Classifier' in best_model[0])
+    print(f"Expected profit from {model_name}: ${profit:.4f}")
 
-# Print the expected profits
-print("Expected profit from the best classification model: $", classification_profit)
-print("Expected profit from the best regression model: $", regression_profit)
-print("Best model prediction", best_profit)
-if(regression_profit > classification_profit):
-    print("The regression model is better than the classification model, and is the most profitable: $", regression_profit)
+best_classification_model_name = best_classification_model[0]
+best_regression_model_name = best_regression_model[0]
+best_overall_model_name = best_model[0]
+
+# Calculating precision and profit for the best classification model
+best_classification_predictions = best_classification_model[1]['model'].predict(X_test_class)
+best_classification_precision = get_model_precision(best_classification_model[1]['model'], X_test_class, y_test_class)
+classification_profit = calculate_profit(best_classification_predictions, best_classification_precision, True)
+
+# Calculating profit for the best regression model
+best_regression_predictions = best_regression_model[1]['model'].predict(X_test_reg)
+regression_profit = calculate_profit(best_regression_predictions, is_classification=False)
+
+# Calculating profit for the best overall model
+is_best_model_classification = 'Classifier' in best_model[0]
+best_model_predictions = best_model[1]['model'].predict(score_data_processed)
+if is_best_model_classification:
+    best_model_precision = get_model_precision(best_model[1]['model'], X_test_class, y_test_class)
+    best_profit = calculate_profit(best_model_predictions, best_model_precision, True)
 else:
-    print("The classification model is better than the regression model, and is the most profitable: $", classification_profit)
+    best_profit = calculate_profit(best_model_predictions, is_classification=False)
+
+# Print the expected profits with model names
+print(f"Expected profit from the best classification model ({best_classification_model_name}): ${classification_profit:.2f}")
+print(f"Expected profit from the best regression model ({best_regression_model_name}): ${regression_profit:.2f}")
+#print(f"Expected profit from the best overall model ({best_overall_model_name}): ${best_profit:.2f}")
+
 
 
 print("Model development and evaluation completed.")
