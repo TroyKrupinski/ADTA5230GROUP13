@@ -4,7 +4,7 @@ Final Project for ADTA5230 - University of North Texas - Analytics Department
 Troy Krupinski (Lead programmer), Prashant Thapaliya, Gayathri Devi Kondam, Raghavireddy Polavarapu, Jashwanth Kalyan.
 
 
-(MAIN PYTHON file IS pyMain.py)! USE THIS FOR OUTPUT)*******
+(MAIN PYTHON file IS newMain.py)! USE THIS FOR OUTPUT)*******
 (MAIN R file IS main.R. Currently still in development.)
 
 
