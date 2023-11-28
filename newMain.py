@@ -36,6 +36,45 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score, accuracy_score, precision_score, recall_score, f1_score, r2_score, mean_squared_error
 from sklearn.metrics import roc_curve, auc
+
+# importing easygui module
+from easygui import *
+ 
+ifEDA = False
+
+# message / information to be displayed on the screen
+message = "Would you like to show the EDA?"
+ 
+# title of the window
+title = "GfG - EasyGUI"
+ 
+# creating a yes no box
+output = ynbox(message, title)
+
+if output:
+     
+    # message / information to be displayed on the screen
+    message = "Eda will be shown"
+    ifEDA = True
+    # title of the window
+    title = "Troy Krupinski"
+  
+    # creating a message box
+    msg = msgbox(message, title)
+ 
+# if user pressed No
+else:
+     
+    # message / information to be displayed on the screen
+    message = "Eda will not be shown"
+  
+    # title of the window
+    title = "Troy Krupinski"
+  
+    # creating a message box
+    msg = msgbox(message, title)
+     
+
 print("Author: <Troy Krupinski>")
 
 # Load the data
@@ -45,11 +84,12 @@ data = pd.read_excel('nonprofit.xlsx')
 print("Descriptive Statistics:")
 print(data.describe(include='all'))
 
-print("Descriptive Statistics per column:")
+print("Descriptive Statistics per column:") #Show basic statistical details for each column/variable
 for column in data.columns:
     print(f"Column: {column}")
     print(data[column].describe())
     print()
+#Renaming columns for better visualization
 data_renamed = data.rename(columns={
     'ownd': 'Homeowner (1/0)',
     'kids': 'Number of Children',
@@ -76,22 +116,25 @@ selected_columns = ['Homeowner (1/0)', 'Number of Children', 'Household Income C
                     'Gender (0: Male, 1: Female)', 'Wealth Rating (0-9)', 'Avg Home Value ($K)', 
                     'Median Family Income ($K)', 'Lifetime Promotions', 'Lifetime Gift Amount ($)', 
                     'Donor (1/0)', 'Donation Amount ($)']
+
+#Exploring missing values in the dataset
 print("Missing values in each column:")
 print(data.isnull().sum())
 
 # Visualization of data distribution and relationships
-for col in data_renamed.select_dtypes(include=np.number).columns:
-    plt.figure(figsize=(6, 4))
-    sns.histplot(data_renamed[col], kde=True)
-    plt.title(f'Distribution of {col}')
-    plt.show()
+if ifEDA:
+    for col in data_renamed.select_dtypes(include=np.number).columns:
+        plt.figure(figsize=(6, 4))
+        sns.histplot(data_renamed[col], kde=True)
+        plt.title(f'Distribution of {col}')
+        plt.show()
 
-for col in data_renamed.select_dtypes(include='object').columns:
-    plt.figure(figsize=(6, 4))
-    sns.countplot(x=col, data=data_renamed)
-    plt.title(f'Countplot of {col}')
-    plt.xticks(rotation=45)
-    plt.show()
+    for col in data_renamed.select_dtypes(include='object').columns:
+        plt.figure(figsize=(6, 4))
+        sns.countplot(x=col, data=data_renamed)
+        plt.title(f'Countplot of {col}')
+        plt.xticks(rotation=45)
+        plt.show()
 
 # Dropping the 'id' column as it's not a predictor variable
 print("Calculating correlation matrix...")
