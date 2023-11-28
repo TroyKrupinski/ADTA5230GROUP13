@@ -37,8 +37,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, roc_auc_score, accuracy_score, precision_score, recall_score, f1_score, r2_score, mean_squared_error
 from sklearn.metrics import roc_curve, auc
 from easygui import *
-import warnings
-warnings.filterwarnings("ignore")
+
 
 ifEDA = False
 
@@ -190,7 +189,7 @@ classification_models = {
         'params': {'n_estimators': [50, 100], 'learning_rate': [0.1, 0.5]}
     },
     'LogisticRegression': {
-        'model': LogisticRegression(random_state=42, max_iter=1000),  # Increase max_iter
+        'model': LogisticRegression(random_state=42, max_iter=200),  # Increase max_iter
         'params': {'C': [0.1, 1, 10]}
     },
     'MLPClassifier': {
@@ -200,6 +199,7 @@ classification_models = {
     'KNeighborsClassifier': {
         'model': KNeighborsClassifier(),
         'params': {'n_neighbors': [3, 5, 7]}
+        # Add more parameters here...neighbors 
     },
     'SVC': {
         'model': SVC(random_state=42),
@@ -232,8 +232,6 @@ regression_models = {
     # Add more regression models here...
 }
 
-# Model fitting and tuning
-# ... [previous code remains unchanged]
 
 # Function to display feature importances
 def display_feature_importances(model, feature_names):
@@ -262,6 +260,7 @@ def display_feature_importances(model, feature_names):
 # Model fitting and tuning
 best_models = {}
 for model_name, model_info in {**classification_models, **regression_models}.items():
+    
     y_target = y_train_class if 'Classifier' in model_name else y_train_reg
     grid_search = GridSearchCV(model_info['model'], model_info['params'], cv=5, scoring='accuracy' if 'Classifier' in model_name else 'r2', n_jobs=-1)
     grid_search.fit(X_train_class if 'Classifier' in model_name else X_train_reg, y_target)
@@ -382,6 +381,7 @@ print("Best model overall = " + best_classification_model[0] + " with score: " +
 
 # Constants
 average_donation = 14.50  # average donation amount
+
 mailing_cost = 2.00       # cost per mailing
 response_rate = 0.10      # typical overall response rate
 
@@ -394,6 +394,7 @@ best_model = max(best_models.items(), key=lambda x: x[1]['score'])
 print("Best model by score: " + best_model[0] + " with score: " + str(best_model[1]['score']) + " in percent form: " + str(best_model[1]['score']*100) + "%")
 # Profit calculation function
 def calculate_profit(predictions, precision=None, is_classification=True):
+    
     profit_per_donor = average_donation - mailing_cost # profit per donor
     rows = len(predictions) # number of rows in the dataset
 
@@ -405,7 +406,7 @@ def calculate_profit(predictions, precision=None, is_classification=True):
     else:
         #Will most likely remove linear regressions from the model
         total_predicted_donations = sum(predictions)
-        profit = total_predicted_donations - (rows * mailing_cost)
+        profit = "reg"
 
     return profit
 
@@ -435,7 +436,7 @@ for model_name, model_info in best_models.items(): #best_models.items() is a lis
     else:
         profit = calculate_profit(predictions, is_classification=False)
 
-    print(f"Expected profit from {model_name}: ${profit:.4f}")
+    print(f"Expected profit from {model_name}: ${profit}")
 
 best_classification_model_name = best_classification_model[0]
 best_regression_model_name = best_regression_model[0]
@@ -461,7 +462,7 @@ else:
 
 # Print the expected profits with model names
 print(f"Expected profit from the best classification model ({best_classification_model_name}): ${classification_profit:.2f}")
-print(f"Expected profit from the best regression model ({best_regression_model_name}): ${regression_profit:.2f}")
+print(f"Expected profit from the best regression model ({best_regression_model_name}): ${regression_profit}")
 #print(f"Expected profit from the best overall model ({best_overall_model_name}): ${best_profit:.2f}")
 
 

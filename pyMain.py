@@ -193,7 +193,7 @@ def evaluate_model(model, X_test, y_test, model_name, is_classification=True):
             fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
             auc_score = roc_auc_score(y_test, y_pred_proba)
 
-            plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc_score:.2f})")
+            plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc_score:.4f})")
             plt.plot([0, 1], [0, 1], 'k--')
             plt.xlim([0.0, 1.0])
             plt.ylim([0.0, 1.05])
@@ -202,7 +202,7 @@ def evaluate_model(model, X_test, y_test, model_name, is_classification=True):
             plt.title(f"ROC Curve for {model_name}")
 
             # Add accuracy, precision, recall, and F1 score to the plot
-            plt.text(0.5, 0.2, f"Accuracy: {accuracy:.2f}\nPrecision: {precision:.2f}\nRecall: {recall:.2f}\nF1 Score: {f1:.2f}", 
+            plt.text(0.5, 0.2, f"Accuracy: {accuracy:.4f}\nPrecision: {precision:.4f}\nRecall: {recall:.4f}\nF1 Score: {f1:.4f}", 
                      horizontalalignment='center', verticalalignment='center', transform=plt.gca().transAxes)
 
             plt.legend(loc="lower right")
@@ -220,8 +220,8 @@ def evaluate_model(model, X_test, y_test, model_name, is_classification=True):
         plt.title(f"Scatter Plot for {model_name}")
         plt.show()
 
-        print(f"R^2 Score for {model_name}: {r2:.2f}")
-        print(f"Mean Squared Error for {model_name}: {mse:.2f}")
+        print(f"R^2 Score for {model_name}: {r2:.4f}")
+        print(f"Mean Squared Error for {model_name}: {mse:.4f}")
 
 # ... [rest of the script remains the same] ...
 
