@@ -1,6 +1,6 @@
 # Author: Troy Krupinski
 # Original Date: 11/15/2023
-# REFACTORED 11/20/
+# REFACTORED 11/28/2023
 
 #FALL 2023
 #ADTA 5230
@@ -19,12 +19,16 @@
 
 # To go through file progression, exit out of each window / graph window to continue to next step
 
+
+
+
 #TODO FIND AND ASSOCIATE IDS
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import importlib
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -40,6 +44,7 @@ from easygui import *
 
 
 ifEDA = False
+ifoutput = False
 
 # message / information to be displayed on the screen
 message = "Would you like to show the EDA?"
@@ -277,6 +282,40 @@ for model_name, model_info in {**classification_models, **regression_models}.ite
 
 # --- Evaluation ---
 
+
+# message / information to be displayed on the screen
+message = "Would you like to show the EDA?"
+ 
+# title of the window
+title = "Troy Krupinski"
+ 
+# creating a yes no box
+output = ynbox(message, title)
+
+if output:
+     
+    # message / information to be displayed on the screen
+    message = "Evvaluation will be shown"
+    ifoutput = True
+    # title of the window
+    title = "Troy Krupinski"
+  
+    # creating a message box
+    msg = msgbox(message, title)
+ 
+# if user pressed No
+else:
+     
+    # message / information to be displayed on the screen
+    message = "Evvaluation will not be shown"
+  
+    # title of the window
+    title = "Troy Krupinski"
+  
+    # creating a message box
+    msg = msgbox(message, title)
+     
+
 def evaluate_model(model, X_test, y_test, model_name, is_classification=True):
     y_pred = model.predict(X_test)
     if is_classification:
@@ -383,7 +422,7 @@ print("Best model overall = " + best_classification_model[0] + " with score: " +
 average_donation = 14.50  # average donation amount
 
 mailing_cost = 2.00       # cost per mailing
-response_rate = 0.10      # typical overall response rate
+response_rate = 0.10      # typical overall response rate,
 
 # Assuming best_models is a dictionary with model names as keys and dictionaries with 'score' and 'model' as values
 
@@ -393,22 +432,36 @@ best_regression_model = max((model for model in best_models.items() if 'Regresso
 best_model = max(best_models.items(), key=lambda x: x[1]['score'])
 print("Best model by score: " + best_model[0] + " with score: " + str(best_model[1]['score']) + " in percent form: " + str(best_model[1]['score']*100) + "%")
 # Profit calculation function
-def calculate_profit(predictions, precision=None, is_classification=True):
-    
-    profit_per_donor = average_donation - mailing_cost # profit per donor
-    rows = len(predictions) # number of rows in the dataset
-
+# Profit calculation function
+def calculate_profit(predictions, average_donation, mailing_cost, precision=None, is_classification=True):
     if is_classification:
         if precision is None:
-            raise ValueError("Precision must be provided for classification models")
-        true_donors = precision * rows # precision (say .88 IE 88%) * rows (number of rows in the dataset
-        profit = true_donors * profit_per_donor # profit per donor * true_donors (precision * rows)
+            print("Precision must be provided for classification models")
+            return None  # Return None or a suitable default value if precision is not provided
+        true_positives = sum(predictions)  # Number of predicted donors
+        true_donors = true_positives * precision
+        profit = true_donors * average_donation - len(predictions) * mailing_cost
     else:
-        #Will most likely remove linear regressions from the model
         total_predicted_donations = sum(predictions)
-        profit = "reg"
-
+        profit = total_predicted_donations - len(predictions) * mailing_cost
     return profit
+
+# Calculate and print profits for each model
+for model_name, model_info in best_models.items():
+    is_classification = 'Classifier' in model_name
+    X_test = X_test_class if is_classification else X_test_reg
+    y_test = y_test_class if is_classification else y_test_reg
+    predictions = model_info['model'].predict(X_test)
+
+    if is_classification:
+        precision = precision_score(y_test, predictions)
+        profit = calculate_profit(predictions, average_donation, mailing_cost, precision, True)
+    else:
+        profit = calculate_profit(predictions, average_donation, mailing_cost, is_classification=False)
+
+    print(f"Expected profit from {model_name}: ${profit}")
+
+
 
 #print("Expected profit from the best model: $", calculate_profit(best_model[1]['model'].predict(score_data_processed), True))
 
@@ -423,21 +476,6 @@ def get_model_precision(model, X_test, y_test):
     return precision_score(y_test, y_pred)
 
 # Calculate and print profits for each model
-for model_name, model_info in best_models.items(): #best_models.items() is a list of tuples, with the first element being the model name and the second element being the model info
-    is_classification = 'Classifier' in model_name
-    model = model_info['model']
-    X_test = X_test_class if is_classification else X_test_reg
-    y_test = y_test_class if is_classification else y_test_reg
-    predictions = model.predict(X_test)
-
-    if is_classification:
-        precision = get_model_precision(model, X_test, y_test)
-        profit = calculate_profit(predictions, precision, True)
-    else:
-        profit = calculate_profit(predictions, is_classification=False)
-
-    print(f"Expected profit from {model_name}: ${profit}")
-
 best_classification_model_name = best_classification_model[0]
 best_regression_model_name = best_regression_model[0]
 best_overall_model_name = best_model[0]
@@ -449,7 +487,7 @@ classification_profit = calculate_profit(best_classification_predictions, best_c
 
 # Calculating profit for the best regression model
 best_regression_predictions = best_regression_model[1]['model'].predict(X_test_reg)
-regression_profit = calculate_profit(best_regression_predictions, is_classification=False)
+regression_profit = calculate_profit(best_regression_predictions, average_donation, mailing_cost, is_classification=False)
 
 # Calculating profit for the best overall model
 is_best_model_classification = 'Classifier' in best_model[0]
@@ -457,20 +495,36 @@ best_model_predictions = best_model[1]['model'].predict(score_data_processed)
 if is_best_model_classification:
     best_model_precision = get_model_precision(best_model[1]['model'], X_test_class, y_test_class)
     best_profit = calculate_profit(best_model_predictions, best_model_precision, True)
-else:
-    best_profit = calculate_profit(best_model_predictions, is_classification=False)
+else:   
+    best_profit = calculate_profit(best_model_predictions, is_classification=False, average_donation=average_donation, mailing_cost=mailing_cost)
 
 # Print the expected profits with model names
-print(f"Expected profit from the best classification model ({best_classification_model_name}): ${classification_profit:.2f}")
+print(f"Expected profit from the best classification model ({best_classification_model_name}): ${classification_profit}")
+best_regression_predictions = best_regression_model[1]['model'].predict(X_test_reg)
+regression_profit = calculate_profit(best_regression_predictions, average_donation, mailing_cost, is_classification=False)
+
 print(f"Expected profit from the best regression model ({best_regression_model_name}): ${regression_profit}")
-#print(f"Expected profit from the best overall model ({best_overall_model_name}): ${best_profit:.2f}")
+print(f"Expected profit from the best overall model ({best_overall_model_name}): ${best_profit}")
 
+#score_data = pd.read_excel('nonprofit_score.xlsx')
+#score_data_processed = preprocessor.transform(score_data.drop(['id', 'donr', 'damt'], axis=1))
+#best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])[1]['model']
+#best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])[1]['model']
+#score_data['DONR'] = best_classification_model.predict(score_data)
+#score_data['DAMT'] = best_regression_model.predict(score_data)
+#score_data.to_csv('model_predictions.csv', index=False)
 
-
-print("Model development and evaluation completed.")
+print("Model development and evaluation completed. Exported to CSV file.")
 #IMPLEMENT THE FOLLOWING:
 
 #IMPLEMENT WRITING THIS TO NONPROFITSCORE
+
+
+
+
+
+
+
 
 
 
