@@ -659,6 +659,117 @@ score_data.to_csv('nonprofit_score.csv', index=False)
 
 print("Model development and evaluation completed. Exported to CSV file.")
 
+# Author: Troy Krupinski
+# ... [rest of your script]
+
+# At the end of your script
+
+# --- Conclusion ---
+# Extracting the best models with print statements for debugging
+best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])
+print("Best Classification Model:", best_classification_model)
+
+best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])
+print("Best Regression Model:", best_regression_model)
+
+best_model = max(best_models.items(), key=lambda x: x[1]['score'])
+print("Best Overall Model:", best_model)
+
+# --- Deployment ---
+
+# Gather key information and results
+import easygui as eg
+
+# Function to create a summary of the descriptive statistics
+def descriptive_stats_summary(data):
+    desc_stats = data.describe(include='all').to_string()
+    return desc_stats
+# Extracting the model name and score
+best_classification_model_name = best_classification_model[0]
+best_classification_model_score = best_classification_model[1]['score']
+
+best_regression_model_name = best_regression_model[0]
+best_regression_model_score = best_regression_model[1]['score']
+
+best_overall_model_name = best_model[0]
+best_overall_model_score = best_model[1]['score']
+
+# Now, using these variables in your GUI summary or print statements
+model_summary = f"Best Classification Model: {best_classification_model_name} with score: {best_classification_model_score}\n" \
+                f"Best Regression Model: {best_regression_model_name} with score: {best_regression_model_score}\n" \
+                f"Best Overall Model: {best_overall_model_name} with score: {best_overall_model_score}"
+
+print(model_summary)
+# You can also use model_summary in your GUI display.
+
+# Function to create a summary of the best models
+def best_models_summary(classification_model, regression_model, overall_model):
+    summary = f"Best Classification Model: {best_classification_model_name} with score: {best_classification_model_score}\n" \
+                    f"Best Regression Model: {best_regression_model_name} with score: {best_regression_model_score}\n" \
+                    f"Best Overall Model: {best_overall_model_name} with score: {best_overall_model_score}"
+    return summary
+
+# Function to create a concise summary of the descriptive statistics
+def feature_importances_summary(model, feature_names):
+    importances = None
+    if hasattr(model, 'feature_importances_'):
+        importances = model.feature_importances_
+    elif hasattr(model, 'coef_'):
+        importances = np.abs(model.coef_[0])
+    else:
+        return "Model does not provide feature importances."
+
+    feature_importances = pd.DataFrame({'feature': feature_names, 'importance': importances})
+    feature_importances.sort_values(by='importance', ascending=False, inplace=True)
+    return feature_importances.head(10).to_string()
+
+
+def descriptive_stats_summary(data):
+    summary = ""
+    for column in data.columns:
+        if data[column].dtype == 'object':
+            # For non-numeric columns, show the count and unique value counts
+            unique_count = data[column].nunique()
+            top_value = data[column].mode()[0]
+            top_value_count = data[column].value_counts()[top_value]
+            summary += f"{column}:\n - Count: {len(data[column])}\n - Unique Values: {unique_count}\n - Most Frequent: {top_value} (Count: {top_value_count})\n\n"
+        else:
+            # For numeric columns, show standard descriptive statistics
+            stats = data[column].describe()
+            stats_string = f"{column}:\n - Count: {stats['count']}\n - Mean: {stats['mean']:.2f}\n - Std: {stats['std']:.2f}\n - Min: {stats['min']:.2f}\n - 25%: {stats['25%']:.2f}\n - 50%: {stats['50%']:.2f}\n - 75%: {stats['75%']:.2f}\n - Max: {stats['max']:.2f}\n\n"
+            summary += stats_string
+    return summary
+
+# GUI to display the summary of the analysis
+def display_analysis_summary(data, classification_model, regression_model, overall_model, feature_names):
+    msg = "Analysis Summary"
+    title = "Data Analysis Report"
+    stats_summary = descriptive_stats_summary(data)
+    models_summary = best_models_summary(classification_model, regression_model, overall_model)
+    feature_imp_summary = feature_importances_summary(overall_model[1]['model'], feature_names)
+    
+    eg.textbox(msg, title, f"Descriptive Statistics:\n{stats_summary}\n\n"
+                           f"Model Summary:\n{models_summary}\n\n"
+                           f"Top 10 Feature Importances for Best Overall Model:\n{feature_imp_summary}")
+
+# Call the function to display the summary
+display_analysis_summary(data, best_classification_model, best_regression_model, best_model, preprocessor.get_feature_names_out())
+
+
+
+
+
+# Optionally, you can add a prompt to open the exported CSV file or perform other actions
+choices = ["Open Exported CSV", "Exit"]
+user_choice = eg.buttonbox("Choose an action:", choices=choices)
+
+if user_choice == "Open Exported CSV":
+    # Code to open the CSV file
+    # This can vary depending on how you want to open the file (e.g., using a default program)
+    import os
+    os.system('start nonprofit_score.csv')  # This will open the file with the default program on Windows
+
+
 #IMPLEMENT THE FOLLOWING:
 
 
