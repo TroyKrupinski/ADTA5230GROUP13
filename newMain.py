@@ -336,47 +336,47 @@ def evaluate_model(model, X_test, y_test, model_name, is_classification=True):
         print(f"F1 Score: {f1:.6f}")
         print(f"AUC Score: {auc_score:.6f}")
         print()
+        if(ifoutput):
+            plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc_score:.6f})")
+            plt.plot([0, 1], [0, 1], 'k--')
+            plt.xlim([0.0, 1.0])
+            plt.ylim([0.0, 1.05])
+            plt.xlabel('False Positive Rate')
+            plt.ylabel('True Positive Rate')
+            plt.title(f"ROC Curve for {model_name}")
 
-        plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc_score:.6f})")
-        plt.plot([0, 1], [0, 1], 'k--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title(f"ROC Curve for {model_name}")
+            # Add accuracy, precision, recall, and F1 score to the plot
+            plt.text(0.5, 0.2, f"Accuracy: {accuracy:.6f}\nPrecision: {precision:.6f}\nRecall: {recall:.6f}\nF1 Score: {f1:.6f}", 
+                    horizontalalignment='center', verticalalignment='center', transform=plt.gca().transAxes)
 
-        # Add accuracy, precision, recall, and F1 score to the plot
-        plt.text(0.5, 0.2, f"Accuracy: {accuracy:.6f}\nPrecision: {precision:.6f}\nRecall: {recall:.6f}\nF1 Score: {f1:.6f}", 
-                 horizontalalignment='center', verticalalignment='center', transform=plt.gca().transAxes)
-
-        plt.legend(loc="lower right")
-        plt.show()
-        
-        # Confusion matrix
-        conf_matrix = confusion_matrix(y_test, y_pred)
-        sns.heatmap(conf_matrix, annot=True, fmt="d")
-        plt.title(f"Confusion Matrix: {model_name}")
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
-        plt.show()
+            plt.legend(loc="lower right")
+            plt.show()
+            
+            # Confusion matrix
+            conf_matrix = confusion_matrix(y_test, y_pred)
+            sns.heatmap(conf_matrix, annot=True, fmt="d")
+            plt.title(f"Confusion Matrix: {model_name}")
+            plt.ylabel('True label')
+            plt.xlabel('Predicted label')
+            plt.show()
     else:
         # Regression metrics
         r2 = r2_score(y_test, y_pred)
         mse = mean_squared_error(y_test, y_pred)
         print(f"Model: {model_name}")
         print(f"R^2 Score: {r2:.6f}, Mean Squared Error: {mse:.6f}")
-        
-        # Scatter plot of true values vs. predictions
-        plt.scatter(y_test, y_pred)
-        plt.xlabel("True Values")
-        plt.ylabel("Predictions")
-        plt.title(f"Prediction Scatter Plot: {model_name}")
-        
-        # Add statistical metrics to the plot
-        plt.text(0.5, 0.9, f"R^2 Score: {r2:.2f}\nMean Squared Error: {mse:.2f}", 
-                 horizontalalignment='center', verticalalignment='center', transform=plt.gca().transAxes)
-        
-        plt.show()
+        if(ifoutput):
+            # Scatter plot of true values vs. predictions
+            plt.scatter(y_test, y_pred)
+            plt.xlabel("True Values")
+            plt.ylabel("Predictions")
+            plt.title(f"Prediction Scatter Plot: {model_name}")
+            
+            # Add statistical metrics to the plot
+            plt.text(0.5, 0.9, f"R^2 Score: {r2:.2f}\nMean Squared Error: {mse:.2f}", 
+                    horizontalalignment='center', verticalalignment='center', transform=plt.gca().transAxes)
+            
+            plt.show()
 
 # Evaluating models
 for model_name, model_info in best_models.items():
@@ -406,6 +406,7 @@ score_data_processed = preprocessor.transform(score_data)
 # Apply models and export predictions
 classification_predictions = best_classification_model[1]['model'].predict(score_data_processed)
 regression_predictions = best_regression_model[1]['model'].predict(score_data_processed)
+print("Best classification model:" + str(best_classification_model[1]['model']) + "regression model:" + str(best_regression_model[1]['model']))
 
 score_data['Predicted_Donor'] = classification_predictions
 score_data['Predicted_Donation_Amount'] = regression_predictions
@@ -420,7 +421,6 @@ print("Best model overall = " + best_classification_model[0] + " with score: " +
 
 # Constants
 average_donation = 14.50  # average donation amount
-
 mailing_cost = 2.00       # cost per mailing
 response_rate = 0.10      # typical overall response rate,
 
@@ -436,8 +436,11 @@ print("Best model by score: " + best_model[0] + " with score: " + str(best_model
 def calculate_profit(predictions, average_donation, mailing_cost, precision=None, is_classification=True):
     if is_classification:
         if precision is None:
-            print("Precision must be provided for classification models")
-            return None  # Return None or a suitable default value if precision is not provided
+            print("Precision not provided for classification model. Calclulating precision by deviding true positives over predictions.")
+            true_positives = sum(predictions)  # Number of predicted donors
+            precision = true_positives / len(predictions)
+            true_donors = true_positives * precision
+            profit = true_donors * average_donation - len(predictions) * mailing_cost
         true_positives = sum(predictions)  # Number of predicted donors
         true_donors = true_positives * precision
         profit = true_donors * average_donation - len(predictions) * mailing_cost
@@ -504,15 +507,15 @@ best_regression_predictions = best_regression_model[1]['model'].predict(X_test_r
 regression_profit = calculate_profit(best_regression_predictions, average_donation, mailing_cost, is_classification=False)
 
 print(f"Expected profit from the best regression model ({best_regression_model_name}): ${regression_profit}")
-print(f"Expected profit from the best overall model ({best_overall_model_name}): ${best_profit}")
+print(f"Expected profit from the best overall model ({best_overall_model_name}): ${classification_profit}")
 
-#score_data = pd.read_excel('nonprofit_score.xlsx')
-#score_data_processed = preprocessor.transform(score_data.drop(['id', 'donr', 'damt'], axis=1))
-#best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])[1]['model']
-#best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])[1]['model']
-#score_data['DONR'] = best_classification_model.predict(score_data)
-#score_data['DAMT'] = best_regression_model.predict(score_data)
-#score_data.to_csv('model_predictions.csv', index=False)
+score_data = pd.read_excel('nonprofit_score.xlsx')
+score_data_processed = preprocessor.transform(score_data.drop(['ID', 'donr', 'damt'], axis=1))
+best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])[1]['model']
+best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])[1]['model']
+score_data['DONR'] = best_classification_model.predict(score_data)
+score_data['DAMT'] = best_regression_model.predict(score_data)
+score_data.to_csv('nonprofit_score.csv', index=False)
 
 print("Model development and evaluation completed. Exported to CSV file.")
 #IMPLEMENT THE FOLLOWING:
