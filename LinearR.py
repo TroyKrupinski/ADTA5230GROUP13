@@ -450,7 +450,8 @@ best_classification_model = max((model for model in best_models.items() if 'Clas
 
 # Similarly, finding the best regression model based on its score.
 # Here, the score is typically R^2, mean squared error, or other regression-specific metrics.
-best_regression_model = linear_regression
+best_regression_model = LinearRegression().fit(X_train_reg, y_train_reg)
+
 
 # Identifying the best overall model (either classification or regression) based on the score.
 # This model is the one with the highest score across all models regardless of their type.
@@ -472,11 +473,12 @@ score_data_processed = preprocessor.transform(score_data)
 
 # Apply models and export predictions
 classification_predictions = best_classification_model[1]['model'].predict(score_data_processed)
-regression_predictions = best_regression_model[1]['model'].predict(score_data_processed)
+regression_predictions = best_regression_model.predict(score_data_processed)
 
 
 
-print("Best classification model:" + str(best_classification_model[1]['model']) + "regression model:" + str(best_regression_model[1]['model']))
+print("Best classification model: " + str(best_classification_model[1]['model']) + ", regression model: " + str(best_regression_model))
+
 
 score_data['Predicted_Donor'] = classification_predictions
 score_data['Predicted_Donation_Amount'] = regression_predictions
@@ -484,8 +486,7 @@ score_data.to_csv('model_predictions.csv', index=False)
 # --- Conclusion ---
 # Summarize findings, discuss limitations, and suggest future work
 print("Best Classification Model: " + best_classification_model[0] + " with score: " + str(best_classification_model[1]['score']))
-print("Best Regression Model: " + best_regression_model[0] + " with score: " + str(best_regression_model[1]['score']))
-print("Best model overall = " + best_classification_model[0] + " with score: " + str(best_classification_model[1]['score']) + " and the best regression model being " + best_regression_model[0] + " with score: " + str(best_regression_model[1]['score']))
+print("Best model overall = " + best_classification_model[0] + " with score: " + str(best_classification_model[1]['score']))
 # Calculate expected profit
 
 
@@ -498,7 +499,8 @@ response_rate = 0.10      # typical overall response rate,
 
 # Finding the best models
 best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])
-best_regression_model = linear_regression
+best_regression_model = LinearRegression().fit(X_train_reg, y_train_reg)
+
 best_model = max(best_models.items(), key=lambda x: x[1]['score'])
 print("Best model by score: " + best_model[0] + " with score: " + str(best_model[1]['score']) + " in percent form: " + str(best_model[1]['score']*100) + "%")
 # Model Precision function
@@ -557,7 +559,7 @@ for model_name, model_info in best_models.items():
         precision = get_model_precision(model_info['model'], X_test, y_test)
 
         # Get regression predictions for the same test set
-        regression_model = best_regression_model[1]['model']
+        regression_model = best_regression_model
         regression_predictions_test = regression_model.predict(X_test_reg)  # Make sure this matches your test set
 
         profit = calculate_profit(model_predictions, regression_predictions_test, mailing_cost, precision, True)
@@ -580,11 +582,11 @@ for model_name, model_info in best_models.items():
 
 
 best_classification_model_name = best_classification_model[0]
-best_regression_model_name = best_regression_model[0]
+best_regression_model_name = best_regression_model
 best_overall_model_name = best_model[0]
 
 best_classification_test_predictions = best_classification_model[1]['model'].predict(X_test_class)
-best_regression_test_predictions = best_regression_model[1]['model'].predict(X_test_reg)
+best_regression_test_predictions = best_regression_model.predict(X_test_reg)
 is_best_model_classification = 'Classifier' in best_model[0]
 # Best classification model profit
 best_classification_precision = get_model_precision(best_classification_model[1]['model'], X_test_class, y_test_class)
@@ -616,7 +618,7 @@ if is_best_model_classification:
         is_classification=True
     )
 else:
-    best_model_test_predictions = best_regression_model[1]['model'].predict(X_test_reg)
+    best_model_test_predictions = best_regression_model.predict(X_test_reg)
     best_profit = calculate_profit(
         np.zeros_like(best_model_test_predictions),  # Assuming non-donor for all
         best_model_test_predictions,
@@ -641,7 +643,8 @@ score_data_processed = preprocessor.transform(score_data)
 
 # Get the best models
 best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])[1]['model']
-best_regression_model = linear_regression
+best_regression_model = LinearRegression().fit(X_train_reg, y_train_reg)
+
 
 # Make predictions using the processed score data
 score_data['DONR'] = best_classification_model.predict(score_data_processed)
@@ -662,7 +665,8 @@ print("Model development and evaluation completed. Exported to CSV file.")
 best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])
 print("Best Classification Model:", best_classification_model)
 
-best_regression_model = linear_regression
+best_regression_model = LinearRegression().fit(X_train_reg, y_train_reg)
+
 print("Best Regression Model:", best_regression_model)
 
 best_model = max(best_models.items(), key=lambda x: x[1]['score'])
@@ -681,8 +685,8 @@ def descriptive_stats_summary(data):
 best_classification_model_name = best_classification_model[0]
 best_classification_model_score = best_classification_model[1]['score']
 
-best_regression_model_name = best_regression_model[0]
-best_regression_model_score = best_regression_model[1]['score']
+best_regression_model_name = best_regression_model
+best_regression_model_score = best_regression_model
 
 best_overall_model_name = best_model[0]
 best_overall_model_score = best_model[1]['score']
