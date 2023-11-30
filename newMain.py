@@ -558,18 +558,30 @@ print(f"Expected profit from the best classification model ({best_classification
 print(f"Expected profit from the best regression model ({best_regression_model_name}): ${best_regression_profit}")
 print(f"Expected profit from the best overall model ({best_overall_model_name}): ${best_profit}")
 
+# Load score data
 score_data = pd.read_excel('nonprofit_score.xlsx')
-#score_data_processed = preprocessor.transform(score_data.drop(['ID', 'donr', 'damt'], axis=1))
+
+# Drop the columns that were not included in the training set
+if 'ID' in score_data.columns:
+    score_data = score_data.drop(['ID'], axis=1)
+
+# Apply the same preprocessing to score_data as was applied to the training data
+score_data_processed = preprocessor.transform(score_data)
+
+# Get the best models
 best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])[1]['model']
 best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])[1]['model']
-score_data['DONR'] = best_classification_model.predict(score_data)
-score_data['DAMT'] = best_regression_model.predict(score_data)
+
+# Make predictions using the processed score data
+score_data['DONR'] = best_classification_model.predict(score_data_processed)
+score_data['DAMT'] = best_regression_model.predict(score_data_processed)
+
+# Export to CSV
 score_data.to_csv('nonprofit_score.csv', index=False)
 
 print("Model development and evaluation completed. Exported to CSV file.")
-#IMPLEMENT THE FOLLOWING:
 
-#IMPLEMENT WRITING THIS TO NONPROFITSCORE
+#IMPLEMENT THE FOLLOWING:
 
 
 
