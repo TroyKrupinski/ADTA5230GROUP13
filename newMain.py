@@ -286,11 +286,10 @@ for model_name, model_info in {**classification_models, **regression_models}.ite
     display_feature_importances(best_model, feature_names)
 
 
-# --- Evaluation ---
-
+# --- Evaluation --- 
 
 # message / information to be displayed on the screen
-message = "Would you like to show the EDA?"
+message = "Would you like to show the ROC graph?"
  
 # title of the window
 title = "Troy Krupinski"
@@ -301,7 +300,7 @@ output = ynbox(message, title)
 if output:
      
     # message / information to be displayed on the screen
-    message = "Evvaluation will be shown"
+    message = "Evaluation will be shown"
     ifoutput = True
     # title of the window
     title = "Troy Krupinski"
@@ -313,7 +312,7 @@ if output:
 else:
      
     # message / information to be displayed on the screen
-    message = "Evvaluation will not be shown"
+    message = "Evaluation will not be shown"
   
     # title of the window
     title = "Troy Krupinski"
