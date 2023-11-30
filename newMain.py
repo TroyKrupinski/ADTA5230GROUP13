@@ -140,10 +140,9 @@ if ifEDA:
         plt.xticks(rotation=45)
         plt.show()
 
-# Dropping the 'id' column as it's not a predictor variable
 print("Calculating correlation matrix...")
 # --- Data Preparation ---
-# Handling missing values for numerical columns
+# Handling missing values for numerical columns, dropping ID column
 X = data.drop(['ID', 'donr', 'damt'], axis=1) 
 numerical_cols = data.select_dtypes(include=['float64', 'int64']).columns
 data[numerical_cols] = data[numerical_cols].fillna(data[numerical_cols].mean())
@@ -152,9 +151,7 @@ data[numerical_cols] = data[numerical_cols].fillna(data[numerical_cols].mean())
 y_classification = data['donr']  # Target for classification
 y_regression = data['damt']  # Target for regression
 
-# Removing target variables from the features dataset
-
-# Identifying categorical columns
+# Identifying categorical and numerical columns
 categorical_cols = X.select_dtypes(include=['object', 'category']).columns
 
 # Preprocessing with transformers
@@ -406,6 +403,9 @@ score_data_processed = preprocessor.transform(score_data)
 # Apply models and export predictions
 classification_predictions = best_classification_model[1]['model'].predict(score_data_processed)
 regression_predictions = best_regression_model[1]['model'].predict(score_data_processed)
+
+
+
 print("Best classification model:" + str(best_classification_model[1]['model']) + "regression model:" + str(best_regression_model[1]['model']))
 
 score_data['Predicted_Donor'] = classification_predictions
@@ -433,84 +433,133 @@ best_model = max(best_models.items(), key=lambda x: x[1]['score'])
 print("Best model by score: " + best_model[0] + " with score: " + str(best_model[1]['score']) + " in percent form: " + str(best_model[1]['score']*100) + "%")
 # Profit calculation function
 # Profit calculation function
-def calculate_profit(predictions, average_donation, mailing_cost, precision=None, is_classification=True):
+
+def get_model_precision(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    true_positives = sum((y_pred == 1) & (y_test == 1))
+    false_positives = sum((y_pred == 1) & (y_test == 0))
+    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+    return precision
+
+def calculate_profit(classification_predictions, regression_predictions, mailing_cost, precision=None, is_classification=True):
+    """
+    Calculate profit considering both classification and regression predictions.
+    
+    :param classification_predictions: Array of classification predictions (1 for donor, 0 for non-donor)
+    :param regression_predictions: Array of regression predictions (predicted donation amounts)
+    :param mailing_cost: Cost of mailing per individual
+    :param precision: Precision of the classification model (optional)
+    :param is_classification: Flag to indicate if the model is a classification model (default: True)
+    :return: Total profit
+    """
     if is_classification:
         if precision is None:
-            print("Precision not provided for classification model. Calclulating precision by deviding true positives over predictions.")
-            true_positives = sum(predictions)  # Number of predicted donors
-            precision = true_positives / len(predictions)
-            true_donors = true_positives * precision
-            profit = true_donors * average_donation - len(predictions) * mailing_cost
-        true_positives = sum(predictions)  # Number of predicted donors
-        true_donors = true_positives * precision
-        profit = true_donors * average_donation - len(predictions) * mailing_cost
+            print("Precision not provided for classification model. Calculating precision.")
+            true_positives = sum(classification_predictions == 1)
+            false_positives = sum(classification_predictions == 0)
+            precision = true_positives / (true_positives + false_positives) if len(classification_predictions) > 0 else 0
+        
+        # Calculate total predicted donations from those classified as donors
+        total_predicted_donations = sum(regression_predictions[classification_predictions == 1])
+
+        # Calculate costs based on the number of mails sent
+        total_mailing_cost = len(classification_predictions) * mailing_cost
+
+        # Calculate profit
+        profit = total_predicted_donations - total_mailing_cost
     else:
-        total_predicted_donations = sum(predictions)
-        profit = total_predicted_donations - len(predictions) * mailing_cost
+        # For regression models, simply sum up the predictions and subtract the mailing cost
+        total_predicted_donations = sum(regression_predictions)
+        profit = total_predicted_donations - len(regression_predictions) * mailing_cost
+    
     return profit
 
-# Calculate and print profits for each model
+# Calculate and print expected profit from the best model
 for model_name, model_info in best_models.items():
     is_classification = 'Classifier' in model_name
     X_test = X_test_class if is_classification else X_test_reg
     y_test = y_test_class if is_classification else y_test_reg
-    predictions = model_info['model'].predict(X_test)
+
+    model_predictions = model_info['model'].predict(X_test)
 
     if is_classification:
-        precision = precision_score(y_test, predictions)
-        profit = calculate_profit(predictions, average_donation, mailing_cost, precision, True)
+        precision = get_model_precision(model_info['model'], X_test, y_test)
+
+        # Get regression predictions for the same test set
+        regression_model = best_regression_model[1]['model']
+        regression_predictions_test = regression_model.predict(X_test_reg)  # Make sure this matches your test set
+
+        profit = calculate_profit(model_predictions, regression_predictions_test, mailing_cost, precision, True)
+
     else:
-        profit = calculate_profit(predictions, average_donation, mailing_cost, is_classification=False)
+        zero_classifications = np.zeros_like(model_predictions)
+
+        profit = calculate_profit(zero_classifications, model_predictions, mailing_cost, is_classification=False)
 
     print(f"Expected profit from {model_name}: ${profit}")
 
 
 
-#print("Expected profit from the best model: $", calculate_profit(best_model[1]['model'].predict(score_data_processed), True))
-
+# --- Deployment ---
 
 
 # predictions = [...]  # This should be your list/array of predictions
 # is_classification = True  # or False, depending on the type of model
 # profit = calculate_profit(predictions, is_classification)
 
-def get_model_precision(model, X_test, y_test):
-    y_pred = model.predict(X_test)
-    return precision_score(y_test, y_pred)
 
-# Calculate and print profits for each model
 best_classification_model_name = best_classification_model[0]
 best_regression_model_name = best_regression_model[0]
 best_overall_model_name = best_model[0]
 
-# Calculating precision and profit for the best classification model
-best_classification_predictions = best_classification_model[1]['model'].predict(X_test_class)
-best_classification_precision = get_model_precision(best_classification_model[1]['model'], X_test_class, y_test_class)
-classification_profit = calculate_profit(best_classification_predictions, best_classification_precision, True)
-
-# Calculating profit for the best regression model
-best_regression_predictions = best_regression_model[1]['model'].predict(X_test_reg)
-regression_profit = calculate_profit(best_regression_predictions, average_donation, mailing_cost, is_classification=False)
-
-# Calculating profit for the best overall model
+best_classification_test_predictions = best_classification_model[1]['model'].predict(X_test_class)
+best_regression_test_predictions = best_regression_model[1]['model'].predict(X_test_reg)
 is_best_model_classification = 'Classifier' in best_model[0]
-best_model_predictions = best_model[1]['model'].predict(score_data_processed)
+# Best classification model profit
+best_classification_precision = get_model_precision(best_classification_model[1]['model'], X_test_class, y_test_class)
+best_classification_profit = calculate_profit(
+    best_classification_test_predictions, 
+    best_regression_test_predictions,  # Use regression test predictions
+    mailing_cost, 
+    precision=best_classification_precision, 
+    is_classification=True
+)
+
+# Best regression model profit
+best_regression_profit = calculate_profit(
+    np.zeros_like(best_regression_test_predictions),  # Assuming non-donor for all
+    best_regression_test_predictions, 
+    mailing_cost, 
+    is_classification=False
+)
+
+# Best overall model profit
 if is_best_model_classification:
-    best_model_precision = get_model_precision(best_model[1]['model'], X_test_class, y_test_class)
-    best_profit = calculate_profit(best_model_predictions, best_model_precision, True)
-else:   
-    best_profit = calculate_profit(best_model_predictions, is_classification=False, average_donation=average_donation, mailing_cost=mailing_cost)
+    best_model_test_predictions = best_classification_model[1]['model'].predict(X_test_class)
+    best_model_precision = get_model_precision(best_classification_model[1]['model'], X_test_class, y_test_class)
+    best_profit = calculate_profit(
+        best_model_test_predictions,
+        best_regression_test_predictions,  # Use regression test predictions
+        mailing_cost,
+        precision=best_model_precision,
+        is_classification=True
+    )
+else:
+    best_model_test_predictions = best_regression_model[1]['model'].predict(X_test_reg)
+    best_profit = calculate_profit(
+        np.zeros_like(best_model_test_predictions),  # Assuming non-donor for all
+        best_model_test_predictions,
+        mailing_cost,
+        is_classification=False
+    )
 
-# Print the expected profits with model names
-print(f"Expected profit from the best classification model ({best_classification_model_name}): ${classification_profit}")
-best_regression_predictions = best_regression_model[1]['model'].predict(X_test_reg)
-regression_profit = calculate_profit(best_regression_predictions, average_donation, mailing_cost, is_classification=False)
-
-print(f"Expected profit from the best regression model ({best_regression_model_name}): ${regression_profit}")
-print(f"Expected profit from the best overall model ({best_overall_model_name}): ${classification_profit}")
+# Corrected print statements
+print(f"Expected profit from the best classification model ({best_classification_model_name}): ${best_classification_profit}")
+print(f"Expected profit from the best regression model ({best_regression_model_name}): ${best_regression_profit}")
+print(f"Expected profit from the best overall model ({best_overall_model_name}): ${best_profit}")
 
 score_data = pd.read_excel('nonprofit_score.xlsx')
-score_data_processed = preprocessor.transform(score_data.drop(['ID', 'donr', 'damt'], axis=1))
+#score_data_processed = preprocessor.transform(score_data.drop(['ID', 'donr', 'damt'], axis=1))
 best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])[1]['model']
 best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])[1]['model']
 score_data['DONR'] = best_classification_model.predict(score_data)
