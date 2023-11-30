@@ -150,30 +150,52 @@ if ifEDA:
         plt.show()
 
 print("Calculating correlation matrix...")
-# --- Data Preparation ---
-# Handling missing values for numerical columns, dropping ID column
-X = data.drop(['ID', 'donr', 'damt'], axis=1) 
+#-- Data Prep -- 
+
+
+# Data Preparation and Preprocessing
+
+# Dropping irrelevant columns and handling missing values
+# ID, donr, and damt are dropped from the features set as they are not predictors.
+# 'ID' is an identifier, 'donr' and 'damt' are targets for classification and regression, respectively.
+X = data.drop(['ID', 'donr', 'damt'], axis=1)
+
+# Select columns that are of numeric type (float and int).
+# This is important for applying numeric-specific preprocessing steps.
 numerical_cols = data.select_dtypes(include=['float64', 'int64']).columns
+
+# Replace missing values in numerical columns with the mean of their respective columns.
+# This is a common practice to handle missing numeric data to maintain the distribution.
 data[numerical_cols] = data[numerical_cols].fillna(data[numerical_cols].mean())
 
-# Separating target variables
-y_classification = data['donr']  # Target for classification
-y_regression = data['damt']  # Target for regression
+# Separating target variables for classification and regression models.
+# 'donr' is the target variable for classification (predicting donor status).
+# 'damt' is the target variable for regression (predicting donation amount).
+y_classification = data['donr']
+y_regression = data['damt']
 
-# Identifying categorical and numerical columns
+# Identifying categorical columns for one-hot encoding.
+# One-hot encoding is necessary to convert categorical variables into a form that could be provided to ML algorithms.
 categorical_cols = X.select_dtypes(include=['object', 'category']).columns
 
-# Preprocessing with transformers
+# Creating transformers for preprocessing:
+# OneHotEncoder for categorical variables, converting them into dummy/indicator variables.
+# StandardScaler for numerical variables, standardizing features by removing the mean and scaling to unit variance.
 categorical_transformer = OneHotEncoder(drop='first')
 numerical_transformer = StandardScaler()
 
+# In case 'ID' column is not dropped previously, ensure it is dropped from the features set.
+# Redundant check to ensure 'ID' is not included in the feature set.
 if 'ID' in X.columns:
     X = X.drop('ID', axis=1)
 
-# Handling missing values for numerical columns
+# Handling missing values for numerical columns again, post dropping the 'ID' column.
+# This step ensures that no missing values are present in the numerical columns of the dataset.
 numerical_cols = X.select_dtypes(include=['float64', 'int64']).columns
 X[numerical_cols] = X[numerical_cols].fillna(X[numerical_cols].mean())
-# Combining transformers into a preprocessor
+
+# Creating a preprocessor that applies the numerical and categorical transformers.
+# ColumnTransformer allows different columns or column subsets of the input to be transformed separately.
 print("Preprocessing data...")
 preprocessor = ColumnTransformer(
     transformers=[
@@ -181,11 +203,25 @@ preprocessor = ColumnTransformer(
         ('cat', categorical_transformer, categorical_cols)
     ])
 
-# Applying the transformations
+# Applying the transformations to the features set.
+# This step is crucial to make the data suitable for feeding into machine learning models.
 X_processed = preprocessor.fit_transform(X)
 
-# Splitting the data
+
+# Splitting the data for model training and testing.
+
+# For Classification Model:
+# X_train_class and X_test_class are the training and testing sets for features (independent variables).
+# y_train_class and y_test_class are the corresponding training and testing sets for the target (dependent variable).
+# This split is specifically for the classification model.
+# test_size=0.2 means that 20% of the data will be used for testing, while 80% will be used for training.
+# random_state=42 is set to ensure reproducibility. It ensures that the split is the same each time the code is run.
 X_train_class, X_test_class, y_train_class, y_test_class = train_test_split(X_processed, y_classification, test_size=0.2, random_state=42)
+
+# For Regression Model:
+# Similarly, X_train_reg and X_test_reg are the training and testing sets for features for the regression model.
+# y_train_reg and y_test_reg are the training and testing sets for the regression target variable.
+# The same test_size and random_state parameters are used to ensure consistency with the classification model split.
 X_train_reg, X_test_reg, y_train_reg, y_test_reg = train_test_split(X_processed, y_regression, test_size=0.2, random_state=42)
 
 
