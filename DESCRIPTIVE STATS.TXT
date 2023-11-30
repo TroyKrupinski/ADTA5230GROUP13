@@ -1,72 +1,415 @@
-#Author: Troy Krupinski
+PS C:\Users\dunke\ADTA5230GROUP13> py .\newMain.py
+Author: <Troy Krupinski>
+Descriptive Statistics:
+                 ID region         ownd         kids          inc          sex  ...         gifr         mdon          lag         gifa         donr         damt
+count   6002.000000   6002  6002.000000  6002.000000  6002.000000  6002.000000  ...  6002.000000  6002.000000  6002.000000  6002.000000  6002.000000  6002.000000
+unique          NaN      5          NaN          NaN          NaN          NaN  ...          NaN          NaN          NaN          NaN          NaN          NaN
+top             NaN   ter2          NaN          NaN          NaN          NaN  ...          NaN          NaN          NaN          NaN          NaN          NaN
+freq            NaN   2083          NaN          NaN          NaN          NaN  ...          NaN          NaN          NaN          NaN          NaN          NaN
+mean    3978.908197    NaN     0.884538     1.583972     3.939020     0.607797  ...    15.653949    18.789237     6.318560    11.677666     0.498834     7.209097
+std     2301.807612    NaN     0.319605     1.412455     1.401887     0.488282  ...    12.424625     5.596294     3.641375     6.528124     0.500040     7.361232
+min        1.000000    NaN     0.000000     0.000000     1.000000     0.000000  ...     1.000000     5.000000     1.000000     1.890000     0.000000     0.000000
+25%     1985.250000    NaN     1.000000     0.000000     3.000000     0.000000  ...     7.000000    15.000000     4.000000     6.950000     0.000000     0.000000
+50%     3945.500000    NaN     1.000000     2.000000     4.000000     1.000000  ...    12.000000    18.000000     5.000000    10.200000     0.000000     0.000000
+75%     5963.750000    NaN     1.000000     3.000000     5.000000     1.000000  ...    20.000000    22.000000     7.000000    14.820000     1.000000    14.000000
+max     8009.000000    NaN     1.000000     5.000000     7.000000     1.000000  ...   173.000000    40.000000    34.000000    72.270000     1.000000    27.000000
 
-# Checking for missing values in the dataset
-missing_values = data.isnull().sum()
+[11 rows x 20 columns]
+Descriptive Statistics per column:
+Column: ID
+count    6002.000000
+mean     3978.908197
+std      2301.807612
+min         1.000000
+25%      1985.250000
+50%      3945.500000
+75%      5963.750000
+max      8009.000000
+Name: ID, dtype: float64
 
-# Generating descriptive statistics for the dataset
-descriptive_statistics = data.describe()
+Column: region
+count     6002
+unique       5
+top       ter2
+freq      2083
+Name: region, dtype: object
 
-missing_values, descriptive_statistics
+Column: ownd
+count    6002.000000
+mean        0.884538
+std         0.319605
+min         0.000000
+25%         1.000000
+50%         1.000000
+75%         1.000000
+max         1.000000
+Name: ownd, dtype: float64
 
-Result:
+Column: kids
+count    6002.000000
+mean        1.583972
+std         1.412455
+min         0.000000
+25%         0.000000
+50%         2.000000
+75%         3.000000
+max         5.000000
+Name: kids, dtype: float64
 
-(ID        0
- region    0
- ownd      0
- kids      0
- inc       0
- sex       0
- wlth      0
- hv        0
- incmed    0
- incavg    0
- low       0
- npro      0
- gifdol    0
- gifl      0
- gifr      0
- mdon      0
- lag       0
- gifa      0
- donr      0
- damt      0
- dtype: int64,
-                 ID         ownd         kids          inc          sex  \
- count  6002.000000  6002.000000  6002.000000  6002.000000  6002.000000   
- mean   3978.908197     0.884538     1.583972     3.939020     0.607797   
- std    2301.807612     0.319605     1.412455     1.401887     0.488282   
- min       1.000000     0.000000     0.000000     1.000000     0.000000   
- 25%    1985.250000     1.000000     0.000000     3.000000     0.000000   
- 50%    3945.500000     1.000000     2.000000     4.000000     1.000000   
- 75%    5963.750000     1.000000     3.000000     5.000000     1.000000   
- max    8009.000000     1.000000     5.000000     7.000000     1.000000   
- 
-               wlth           hv       incmed       incavg          low  \
- count  6002.000000  6002.000000  6002.000000  6002.000000  6002.000000   
- mean      7.023159   183.905365    43.948850    56.789404    13.885038   
- std       2.330964    72.770510    24.664411    24.833503    13.104649   
- min       0.000000    51.000000     3.000000    14.000000     0.000000   
- 25%       6.000000   134.000000    27.000000    40.000000     4.000000   
- 50%       8.000000   170.000000    38.000000    52.000000    10.000000   
- 75%       9.000000   218.000000    55.000000    68.000000    20.000000   
- max       9.000000   710.000000   287.000000   287.000000    87.000000   
- 
-               npro       gifdol         gifl         gifr         mdon  \
- count  6002.000000  6002.000000  6002.000000  6002.000000  6002.000000   
- mean     61.354382   115.799567    22.981340    15.653949    18.789237   
- std      30.305150    86.537977    29.396428    12.424625     5.596294   
- min       2.000000    23.000000     3.000000     1.000000     5.000000   
- 25%      37.000000    65.000000    10.000000     7.000000    15.000000   
- 50%      59.000000    91.000000    16.000000    12.000000    18.000000   
- 75%      83.000000   141.000000    25.000000    20.000000    22.000000   
- max     164.000000  1974.000000   642.000000   173.000000    40.000000   
- 
-                lag         gifa         donr         damt  
- count  6002.000000  6002.000000  6002.000000  6002.000000  
- mean      6.318560    11.677666     0.498834     7.209097  
- std       3.641375     6.528124     0.500040     7.361232  
- min       1.000000     1.890000     0.000000     0.000000  
- 25%       4.000000     6.950000     0.000000     0.000000  
- 50%       5.000000    10.200000     0.000000     0.000000  
- 75%       7.000000    14.820000     1.000000    14.000000  
- max      34.000000    72.270000     1.000000    27.000000  )
+Column: inc
+count    6002.000000
+mean        3.939020
+std         1.401887
+min         1.000000
+25%         3.000000
+50%         4.000000
+75%         5.000000
+max         7.000000
+Name: inc, dtype: float64
+
+Column: sex
+count    6002.000000
+mean        0.607797
+std         0.488282
+min         0.000000
+25%         0.000000
+50%         1.000000
+75%         1.000000
+max         1.000000
+Name: sex, dtype: float64
+
+Column: wlth
+count    6002.000000
+mean        7.023159
+std         2.330964
+min         0.000000
+25%         6.000000
+50%         8.000000
+75%         9.000000
+max         9.000000
+Name: wlth, dtype: float64
+
+Column: hv
+count    6002.000000
+mean      183.905365
+std        72.770510
+min        51.000000
+25%       134.000000
+50%       170.000000
+75%       218.000000
+max       710.000000
+Name: hv, dtype: float64
+
+Column: incmed
+count    6002.000000
+mean       43.948850
+std        24.664411
+min         3.000000
+25%        27.000000
+50%        38.000000
+75%        55.000000
+max       287.000000
+Name: incmed, dtype: float64
+
+Column: incavg
+count    6002.000000
+mean       56.789404
+std        24.833503
+min        14.000000
+25%        40.000000
+50%        52.000000
+75%        68.000000
+max       287.000000
+Name: incavg, dtype: float64
+
+Column: low
+count    6002.000000
+mean       13.885038
+std        13.104649
+min         0.000000
+25%         4.000000
+50%        10.000000
+75%        20.000000
+max        87.000000
+Name: low, dtype: float64
+
+Column: npro
+count    6002.000000
+mean       61.354382
+std        30.305150
+min         2.000000
+25%        37.000000
+50%        59.000000
+75%        83.000000
+max       164.000000
+Name: npro, dtype: float64
+
+Column: gifdol
+count    6002.000000
+mean      115.799567
+std        86.537977
+min        23.000000
+25%        65.000000
+50%        91.000000
+75%       141.000000
+max      1974.000000
+Name: gifdol, dtype: float64
+
+Column: gifl
+count    6002.000000
+mean       22.981340
+std        29.396428
+min         3.000000
+25%        10.000000
+50%        16.000000
+75%        25.000000
+max       642.000000
+Name: gifl, dtype: float64
+
+Column: gifr
+count    6002.000000
+mean       15.653949
+std        12.424625
+min         1.000000
+25%         7.000000
+50%        12.000000
+75%        20.000000
+max       173.000000
+Name: gifr, dtype: float64
+
+Column: mdon
+count    6002.000000
+mean       18.789237
+std         5.596294
+min         5.000000
+25%        15.000000
+50%        18.000000
+75%        22.000000
+max        40.000000
+Name: mdon, dtype: float64
+
+Column: lag
+count    6002.000000
+mean        6.318560
+std         3.641375
+min         1.000000
+25%         4.000000
+50%         5.000000
+75%         7.000000
+max        34.000000
+Name: lag, dtype: float64
+
+Column: gifa
+count    6002.000000
+mean       11.677666
+std         6.528124
+min         1.890000
+25%         6.950000
+50%        10.200000
+75%        14.820000
+max        72.270000
+Name: gifa, dtype: float64
+
+Column: donr
+count    6002.000000
+mean        0.498834
+std         0.500040
+min         0.000000
+25%         0.000000
+50%         0.000000
+75%         1.000000
+max         1.000000
+Name: donr, dtype: float64
+
+Column: damt
+count    6002.000000
+mean        7.209097
+std         7.361232
+min         0.000000
+25%         0.000000
+50%         0.000000
+75%        14.000000
+max        27.000000
+Name: damt, dtype: float64
+
+Missing values in each column:
+ID        0
+region    0
+ownd      0
+kids      0
+inc       0
+sex       0
+wlth      0
+hv        0
+incmed    0
+incavg    0
+low       0
+npro      0
+gifdol    0
+gifl      0
+gifr      0
+mdon      0
+lag       0
+gifa      0
+donr      0
+damt      0
+dtype: int64
+Calculating correlation matrix...
+Preprocessing data...
+Top features in the model, RandomForestClassifier:
+             feature  importance
+1          num__kids    0.274595
+2           num__inc    0.093337
+0          num__ownd    0.065835
+4          num__wlth    0.062718
+16  cat__region_ter2    0.054647
+13         num__mdon    0.052884
+10       num__gifdol    0.047121
+9          num__npro    0.042524
+6        num__incmed    0.041838
+14          num__lag    0.039220
+Top features in the model, GradientBoostingClassifier:
+             feature  importance
+1          num__kids    0.416528
+2           num__inc    0.137388
+16  cat__region_ter2    0.099172
+0          num__ownd    0.091118
+4          num__wlth    0.063750
+13         num__mdon    0.043800
+14          num__lag    0.025026
+6        num__incmed    0.021864
+10       num__gifdol    0.021557
+5            num__hv    0.012186
+
+Top features in the model, LogisticRegression:
+             feature  importance
+1          num__kids    2.296499
+19  cat__region_ter5    1.706981
+11         num__gifl    1.440068
+17  cat__region_ter3    1.339990
+0          num__ownd    1.271188
+4          num__wlth    0.896666
+14          num__lag    0.712384
+8           num__low    0.579117
+16  cat__region_ter2    0.573017
+18  cat__region_ter4    0.524723
+
+Model SVC does not provide feature importances.
+Top features in the model, DecisionTreeClassifier:
+             feature  importance
+1          num__kids    0.375042
+2           num__inc    0.144016
+16  cat__region_ter2    0.112521
+0          num__ownd    0.089115
+4          num__wlth    0.059620
+13         num__mdon    0.044872
+14          num__lag    0.036302
+9          num__npro    0.026167
+10       num__gifdol    0.021367
+6        num__incmed    0.020950
+Top features in the model, RandomForestRegressor:
+             feature  importance
+1          num__kids    0.331810
+2           num__inc    0.108347
+0          num__ownd    0.069919
+16  cat__region_ter2    0.069352
+4          num__wlth    0.055703
+13         num__mdon    0.051339
+10       num__gifdol    0.036441
+14          num__lag    0.036292
+9          num__npro    0.035507
+15         num__gifa    0.032972
+Top features in the model, GradientBoostingRegressor:
+             feature  importance
+1          num__kids    0.472542
+2           num__inc    0.131439
+0          num__ownd    0.089700
+16  cat__region_ter2    0.075824
+4          num__wlth    0.067334
+13         num__mdon    0.034771
+10       num__gifdol    0.025534
+6        num__incmed    0.023968
+14          num__lag    0.023073
+11         num__gifl    0.013840
+Top features in the model, LinearRegression:
+             feature  importance
+0          num__ownd    1.542064
+1          num__kids    1.542064
+18  cat__region_ter4    1.542064
+17  cat__region_ter3    1.542064
+16  cat__region_ter2    1.542064
+15         num__gifa    1.542064
+14          num__lag    1.542064
+13         num__mdon    1.542064
+12         num__gifr    1.542064
+11         num__gifl    1.542064
+Model: RandomForestClassifier
+Accuracy: 0.894255
+Precision: 0.878837
+Recall: 0.912752
+F1 Score: 0.895473
+AUC Score: 0.958873
+
+Model: GradientBoostingClassifier
+Accuracy: 0.906744
+Precision: 0.886581
+Recall: 0.931208
+F1 Score: 0.908347
+AUC Score: 0.968088
+
+Model: LogisticRegression
+R^2 Score: 0.170481, Mean Squared Error: 44.714405
+Model: MLPClassifier
+Accuracy: 0.910075
+Precision: 0.896104
+Recall: 0.926174
+F1 Score: 0.910891
+AUC Score: 0.963953
+
+Model: KNeighborsClassifier
+Accuracy: 0.820150
+Precision: 0.758152
+Recall: 0.936242
+F1 Score: 0.837838
+AUC Score: 0.904658
+
+Model: SVC
+R^2 Score: 0.449587, Mean Squared Error: 29.669442
+Model: DecisionTreeClassifier
+Accuracy: 0.850958
+Precision: 0.834671
+Recall: 0.872483
+F1 Score: 0.853158
+AUC Score: 0.877047
+
+Model: RandomForestRegressor
+R^2 Score: 0.662079, Mean Squared Error: 18.215262
+Model: GradientBoostingRegressor
+R^2 Score: 0.648353, Mean Squared Error: 18.955179
+Model: LinearRegression
+R^2 Score: 0.491958, Mean Squared Error: 27.385509
+Best classification model:GradientBoostingClassifier(learning_rate=0.5, random_state=42)regression model:RandomForestRegressor(max_depth=20, random_state=42)
+Best Classification Model: GradientBoostingClassifier with score: 0.9041855272285811
+Best Regression Model: RandomForestRegressor with score: 0.6548798179924817
+Best model overall = GradientBoostingClassifier with score: 0.9041855272285811 and the best regression model being RandomForestRegressor with score: 0.6548798179924817
+Best model by score: GradientBoostingClassifier with score: 0.9041855272285811 in percent form: 90.41855272285811%
+Expected profit from RandomForestClassifier: $6432.706733556882
+Expected profit from GradientBoostingClassifier: $6388.804851331066
+Expected profit from LogisticRegression: $4370.0
+Expected profit from MLPClassifier: $6245.950721914466
+Expected profit from KNeighborsClassifier: $6500.755160624743
+Expected profit from SVC: $5123.0
+Expected profit from DecisionTreeClassifier: $6353.764632027096
+Expected profit from RandomForestRegressor: $6419.436483126865
+Expected profit from GradientBoostingRegressor: $6299.839067015208
+Expected profit from LinearRegression: $6313.721612885407
+Expected profit from the best classification model (GradientBoostingClassifier): $6388.804851331066
+Expected profit from the best regression model (RandomForestRegressor): $6419.436483126865
+Expected profit from the best overall model (GradientBoostingClassifier): $6388.804851331066
+Model development and evaluation completed. Exported to CSV file.
+Best Classification Model: ('GradientBoostingClassifier', {'model': GradientBoostingClassifier(learning_rate=0.5, random_state=42), 'score': 0.9041855272285811})
+Best Regression Model: ('RandomForestRegressor', {'model': RandomForestRegressor(max_depth=20, random_state=42), 'score': 0.6548798179924817})
+Best Overall Model: ('GradientBoostingClassifier', {'model': GradientBoostingClassifier(learning_rate=0.5, random_state=42), 'score': 0.9041855272285811})
+Best Classification Model: GradientBoostingClassifier with score: 0.9041855272285811
+Best Regression Model: RandomForestRegressor with score: 0.6548798179924817
+Best Overall Model: GradientBoostingClassifier with score: 0.9041855272285811

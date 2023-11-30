@@ -531,26 +531,28 @@ def calculate_profit(classification_predictions, regression_predictions, mailing
     :return: Total profit
     """
     if is_classification:
+        # Calculate precision if not provided
         if precision is None:
-            print("Precision not provided for classification model. Calculating precision.")
-            true_positives = sum(classification_predictions == 1)
-            false_positives = sum(classification_predictions == 0)
-            precision = true_positives / (true_positives + false_positives) if len(classification_predictions) > 0 else 0
-        
+            true_positives = sum((classification_predictions == 1) & (actual_donors == 1))
+            false_positives = sum((classification_predictions == 1) & (actual_donors == 0))
+            precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+
         # Calculate total predicted donations from those classified as donors
         total_predicted_donations = sum(regression_predictions[classification_predictions == 1])
 
-        # Calculate costs based on the number of mails sent
-        total_mailing_cost = len(classification_predictions) * mailing_cost
+        # Calculate costs based on the number of mails sent (include both true and false positives)
+        total_mailing_cost = sum(classification_predictions == 1) * mailing_cost
 
         # Calculate profit
         profit = total_predicted_donations - total_mailing_cost
     else:
-        # For regression models, simply sum up the predictions and subtract the mailing cost
+        # For regression models, sum up the predictions and subtract the mailing cost
         total_predicted_donations = sum(regression_predictions)
         profit = total_predicted_donations - len(regression_predictions) * mailing_cost
     
     return profit
+
+
 
 # Calculate and print expected profit from the best model
 for model_name, model_info in best_models.items():

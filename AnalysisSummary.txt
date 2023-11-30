@@ -1,0 +1,215 @@
+Descriptive Statistics:
+ID:
+ - Count: 6002.0
+ - Mean: 3978.91
+ - Std: 2301.81
+ - Min: 1.00
+ - 25%: 1985.25
+ - 50%: 3945.50
+ - 75%: 5963.75
+ - Max: 8009.00
+
+region:
+ - Count: 6002
+ - Unique Values: 5
+ - Most Frequent: ter2 (Count: 2083)
+
+ownd:
+ - Count: 6002.0
+ - Mean: 0.88
+ - Std: 0.32
+ - Min: 0.00
+ - 25%: 1.00
+ - 50%: 1.00
+ - 75%: 1.00
+ - Max: 1.00
+
+kids:
+ - Count: 6002.0
+ - Mean: 1.58
+ - Std: 1.41
+ - Min: 0.00
+ - 25%: 0.00
+ - 50%: 2.00
+ - 75%: 3.00
+ - Max: 5.00
+
+inc:
+ - Count: 6002.0
+ - Mean: 3.94
+ - Std: 1.40
+ - Min: 1.00
+ - 25%: 3.00
+ - 50%: 4.00
+ - 75%: 5.00
+ - Max: 7.00
+
+sex:
+ - Count: 6002.0
+ - Mean: 0.61
+ - Std: 0.49
+ - Min: 0.00
+ - 25%: 0.00
+ - 50%: 1.00
+ - 75%: 1.00
+ - Max: 1.00
+
+wlth:
+ - Count: 6002.0
+ - Mean: 7.02
+ - Std: 2.33
+ - Min: 0.00
+ - 25%: 6.00
+ - 50%: 8.00
+ - 75%: 9.00
+ - Max: 9.00
+
+hv:
+ - Count: 6002.0
+ - Mean: 183.91
+ - Std: 72.77
+ - Min: 51.00
+ - 25%: 134.00
+ - 50%: 170.00
+ - 75%: 218.00
+ - Max: 710.00
+
+incmed:
+ - Count: 6002.0
+ - Mean: 43.95
+ - Std: 24.66
+ - Min: 3.00
+ - 25%: 27.00
+ - 50%: 38.00
+ - 75%: 55.00
+ - Max: 287.00
+
+incavg:
+ - Count: 6002.0
+ - Mean: 56.79
+ - Std: 24.83
+ - Min: 14.00
+ - 25%: 40.00
+ - 50%: 52.00
+ - 75%: 68.00
+ - Max: 287.00
+
+low:
+ - Count: 6002.0
+ - Mean: 13.89
+ - Std: 13.10
+ - Min: 0.00
+ - 25%: 4.00
+ - 50%: 10.00
+ - 75%: 20.00
+ - Max: 87.00
+
+npro:
+ - Count: 6002.0
+ - Mean: 61.35
+ - Std: 30.31
+ - Min: 2.00
+ - 25%: 37.00
+ - 50%: 59.00
+ - 75%: 83.00
+ - Max: 164.00
+
+gifdol:
+ - Count: 6002.0
+ - Mean: 115.80
+ - Std: 86.54
+ - Min: 23.00
+ - 25%: 65.00
+ - 50%: 91.00
+ - 75%: 141.00
+ - Max: 1974.00
+
+gifl:
+ - Count: 6002.0
+ - Mean: 22.98
+ - Std: 29.40
+ - Min: 3.00
+ - 25%: 10.00
+ - 50%: 16.00
+ - 75%: 25.00
+ - Max: 642.00
+
+gifr:
+ - Count: 6002.0
+ - Mean: 15.65
+ - Std: 12.42
+ - Min: 1.00
+ - 25%: 7.00
+ - 50%: 12.00
+ - 75%: 20.00
+ - Max: 173.00
+
+mdon:
+ - Count: 6002.0
+ - Mean: 18.79
+ - Std: 5.60
+ - Min: 5.00
+ - 25%: 15.00
+ - 50%: 18.00
+ - 75%: 22.00
+ - Max: 40.00
+
+lag:
+ - Count: 6002.0
+ - Mean: 6.32
+ - Std: 3.64
+ - Min: 1.00
+ - 25%: 4.00
+ - 50%: 5.00
+ - 75%: 7.00
+ - Max: 34.00
+
+gifa:
+ - Count: 6002.0
+ - Mean: 11.68
+ - Std: 6.53
+ - Min: 1.89
+ - 25%: 6.95
+ - 50%: 10.20
+ - 75%: 14.82
+ - Max: 72.27
+
+donr:
+ - Count: 6002.0
+ - Mean: 0.50
+ - Std: 0.50
+ - Min: 0.00
+ - 25%: 0.00
+ - 50%: 0.00
+ - 75%: 1.00
+ - Max: 1.00
+
+damt:
+ - Count: 6002.0
+ - Mean: 7.21
+ - Std: 7.36
+ - Min: 0.00
+ - 25%: 0.00
+ - 50%: 0.00
+ - 75%: 14.00
+ - Max: 27.00
+
+
+
+Model Summary:
+Best Classification Model: GradientBoostingClassifier with score: 0.9041855272285811
+Best Regression Model: RandomForestRegressor with score: 0.6548798179924817
+Best Overall Model: GradientBoostingClassifier with score: 0.9041855272285811
+
+Top 10 Feature Importances for Best Overall Model:
+             feature  importance
+1          num__kids    0.416528
+2           num__inc    0.137388
+16  cat__region_ter2    0.099172
+0          num__ownd    0.091118
+4          num__wlth    0.063750
+13         num__mdon    0.043800
+14          num__lag    0.025026
+6        num__incmed    0.021864
+10       num__gifdol    0.021557
+5            num__hv    0.012186
