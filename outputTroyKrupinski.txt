@@ -407,16 +407,19 @@ Best Classification Model: GradientBoostingClassifier with score: 0.904185527228
 Best Regression Model: RandomForestRegressor with score: 0.6548798179924817
 Best model overall = GradientBoostingClassifier with score: 0.9041855272285811 and the best regression model being RandomForestRegressor with score: 0.6548798179924817
 Best model by score: GradientBoostingClassifier with score: 0.9041855272285811 in percent form: 90.41855272285811%
-Expected profit from RandomForestClassifier: $13193.5380
-Expected profit from GradientBoostingClassifier: $13309.8043
-Expected profit from LogisticRegression: $4374.0000
-Expected profit from MLPClassifier: $13452.7597
-Expected profit from KNeighborsClassifier: $11381.7595
-Expected profit from SVC: $5123.0000
-Expected profit from DecisionTreeClassifier: $12530.4976
-Expected profit from RandomForestRegressor: $6419.4365
-Expected profit from GradientBoostingRegressor: $6299.8391
-Expected profit from LinearRegression: $6313.7216
-Expected profit from the best classification model (GradientBoostingClassifier): $13309.80
-Expected profit from the best regression model (RandomForestRegressor): $6419.44
+Expected profit from RandomForestClassifier: $5486.0
+Expected profit from GradientBoostingClassifier: $5645.5
+Expected profit from LogisticRegression: $4370.0
+Expected profit from MLPClassifier: $5602.0
+Expected profit from KNeighborsClassifier: $5689.0
+Expected profit from SVC: $5123.0
+Expected profit from DecisionTreeClassifier: $5138.0
+Expected profit from RandomForestRegressor: $6419.436483126865
+Expected profit from GradientBoostingRegressor: $6299.839067015208
+Expected profit from LinearRegression: $6313.721612885407
+Precision not provided for classification model. Calclulating precision by deviding true positives over predictions.
+Precision not provided for classification model. Calclulating precision by deviding true positives over predictions.
+Expected profit from the best classification model (GradientBoostingClassifier): $5645.5
+Expected profit from the best regression model (RandomForestRegressor): $6419.436483126865
+Expected profit from the best overall model (GradientBoostingClassifier): $5645.5
 Model development and evaluation completed.
