@@ -45,6 +45,7 @@ from easygui import *
 
 ifEDA = False
 ifoutput = False
+ifDescript = False
 
 # message / information to be displayed on the screen
 message = "Would you like to show the EDA?"
@@ -122,6 +123,14 @@ selected_columns = ['Homeowner (1/0)', 'Number of Children', 'Household Income C
                     'Donor (1/0)', 'Donation Amount ($)']
 
 #Exploring missing values in the dataset
+descriptive_stats = data.describe()
+
+# Plot heatmap of the descriptive statistics
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(descriptive_stats, annot=True, fmt=".2f", cmap='viridis')
+plt.title('Descriptive Statistics Heatmap')
+plt.show()
 print("Missing values in each column:")
 print(data.isnull().sum())
 
