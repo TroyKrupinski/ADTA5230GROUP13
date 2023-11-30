@@ -268,22 +268,35 @@ def display_feature_importances(model, feature_names):
         print("Top features in the model, " + type(model).__name__ + ":")
         print(feature_importances.head(10))
 
-# Model fitting and tuning
+# Initializing a dictionary to store the best models for both classification and regression.
 best_models = {}
+
+# Looping through both classification and regression models. 
+# ** operator is used to merge the two dictionaries.
 for model_name, model_info in {**classification_models, **regression_models}.items():
     
+    # Selecting the target variable based on whether the model is for classification or regression.
     y_target = y_train_class if 'Classifier' in model_name else y_train_reg
+
+    # Setting up GridSearchCV for hyperparameter tuning.
+    # The scoring metric is chosen based on the type of model (accuracy for classification, R^2 for regression).
     grid_search = GridSearchCV(model_info['model'], model_info['params'], cv=5, scoring='accuracy' if 'Classifier' in model_name else 'r2', n_jobs=-1)
+
+    # Fitting the GridSearchCV on the training data.
     grid_search.fit(X_train_class if 'Classifier' in model_name else X_train_reg, y_target)
     
+    # Extracting the best estimator (model) and its score.
     best_model = grid_search.best_estimator_
     best_models[model_name] = {'model': best_model, 'score': grid_search.best_score_}
 
-    # Get feature names after preprocessing
+    # Retrieving feature names after preprocessing.
     feature_names = preprocessor.get_feature_names_out()
 
-    # Display feature importances for the best model
+    # Displaying feature importances for the best model.
     display_feature_importances(best_model, feature_names)
+
+# The rest of your functions and logic can be explained in a similar manner:
+
 
 
 # --- Evaluation --- 
