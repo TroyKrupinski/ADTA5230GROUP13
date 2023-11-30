@@ -432,17 +432,39 @@ def evaluate_model(model, X_test, y_test, model_name, is_classification=True):
             
             plt.show()
 
-# Evaluating models
+# Evaluating Models
+
+# Iterate over each model in the best_models dictionary.
+# This dictionary contains models along with their names and additional information.
 for model_name, model_info in best_models.items():
+    # Check if the current model is a classification model based on its name.
     is_classification = 'Classifier' in model_name
+
+    # Select the appropriate test dataset based on the type of model (classification or regression).
+    # X_test_class and y_test_class are used for classification models.
+    # X_test_reg and y_test_reg are used for regression models.
     X_test = X_test_class if is_classification else X_test_reg
     y_test = y_test_class if is_classification else y_test_reg
+
+    # Evaluate the model using the evaluate_model function.
+    # This function prints performance metrics and plots (if enabled) for the model.
     evaluate_model(model_info['model'], X_test, y_test, model_name, is_classification=is_classification)
 
-# Finding the best models
+# Selecting the Best Models
+
+# Finding the best classification model based on its score.
+# The score could be accuracy, precision, recall, F1 score, etc., depending on the model's configuration.
+# The max function is used to find the model with the highest score among classification models.
 best_classification_model = max((model for model in best_models.items() if 'Classifier' in model[0]), key=lambda x: x[1]['score'])
+
+# Similarly, finding the best regression model based on its score.
+# Here, the score is typically R^2, mean squared error, or other regression-specific metrics.
 best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])
+
+# Identifying the best overall model (either classification or regression) based on the score.
+# This model is the one with the highest score across all models regardless of their type.
 best_model = max(best_models.items(), key=lambda x: x[1]['score'])
+
 
 # --- Deployment ---
 # Load score data
@@ -488,15 +510,14 @@ best_classification_model = max((model for model in best_models.items() if 'Clas
 best_regression_model = max((model for model in best_models.items() if 'Regressor' in model[0]), key=lambda x: x[1]['score'])
 best_model = max(best_models.items(), key=lambda x: x[1]['score'])
 print("Best model by score: " + best_model[0] + " with score: " + str(best_model[1]['score']) + " in percent form: " + str(best_model[1]['score']*100) + "%")
-# Profit calculation function
-# Profit calculation function
-
+# Model Precision function
 def get_model_precision(model, X_test, y_test):
     y_pred = model.predict(X_test)
     true_positives = sum((y_pred == 1) & (y_test == 1))
     false_positives = sum((y_pred == 1) & (y_test == 0))
     precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
     return precision
+# Profit calculation function
 
 def calculate_profit(classification_predictions, regression_predictions, mailing_cost, precision=None, is_classification=True):
     """
